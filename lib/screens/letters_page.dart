@@ -6,6 +6,10 @@ import 'package:google_fonts/google_fonts.dart';
 import '../services/stage_service.dart';
 import '../services/language_service.dart';
 import '../services/audio_service.dart';
+import '../services/settings_service.dart';
+import '../widgets/settings_bottom_sheet.dart';
+import '../utils/donation_utils.dart';
+
 
 Map<String, dynamic> _parseLettersJson(String jsonString) {
   return jsonDecode(jsonString) as Map<String, dynamic>;
@@ -49,6 +53,7 @@ class _LettersPageState extends State<LettersPage> {
   final StageService _stageService = StageService();
   final LanguageService _langService = LanguageService();
   final AudioService _audioService = AudioService();
+  final SettingsService _settingsService = SettingsService();
   List<LetterData> _letters = [];
   bool _isLoading = true;
   final String _searchQuery = "";
@@ -64,6 +69,7 @@ class _LettersPageState extends State<LettersPage> {
     super.initState();
     _stageService.addListener(_onStageChanged);
     _langService.addListener(_onLanguageChanged);
+    _settingsService.addListener(_onSettingsChanged);
     _loadData();
     _audioService.onPositionChanged.listen((p) async {
       final d = await _audioService.getDuration();
@@ -88,7 +94,14 @@ class _LettersPageState extends State<LettersPage> {
     _audioService.stop();
     _stageService.removeListener(_onStageChanged);
     _langService.removeListener(_onLanguageChanged);
+    _settingsService.removeListener(_onSettingsChanged);
     super.dispose();
+  }
+
+  void _onSettingsChanged() {
+    if (mounted) {
+      setState(() {});
+    }
   }
 
   void _onLanguageChanged() {
@@ -172,7 +185,6 @@ class _LettersPageState extends State<LettersPage> {
           });
         }
       } else {
-        final letter = _letters[index];
         final audioPath = 'audio/letters/$index.mp3';
         
         await _audioService.playAsset(audioPath);
@@ -223,22 +235,43 @@ class _LettersPageState extends State<LettersPage> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.08),
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.2)),
-                  ),
-                  child: Text(
-                    'ⲀⲰ',
-                    style: TextStyle(
-                      fontFamily: 'CopticStandard',
-                      fontSize: 22,
-                      fontWeight: FontWeight.bold,
-                      color: Theme.of(context).colorScheme.primary,
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.08),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.2)),
+                      ),
+                      child: Text(
+                        'ⲀⲰ',
+                        style: TextStyle(
+                          fontFamily: 'CopticStandard',
+                          fontSize: 22,
+                          fontWeight: FontWeight.bold,
+                          color: Theme.of(context).colorScheme.primary,
+                        ),
+                      ),
                     ),
-                  ),
+                    const SizedBox(width: 8),
+                    GestureDetector(
+                      onTap: () => SettingsBottomSheet.show(context, showImageOption: false),
+                      child: Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.08),
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.2)),
+                        ),
+                        child: Icon(
+                          Icons.settings_rounded,
+                          color: Theme.of(context).colorScheme.primary,
+                          size: 22,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.end,
@@ -271,8 +304,11 @@ class _LettersPageState extends State<LettersPage> {
             child: ListView.builder(
               padding: const EdgeInsets.only(left: 20, right: 20, top: 12, bottom: 120),
               cacheExtent: 500, // Increased for smoother scrolling
-              itemCount: filteredLetters.length,
+              itemCount: filteredLetters.length + 1,
               itemBuilder: (context, index) {
+                if (index == filteredLetters.length) {
+                  return DonationUtils.buildDonationBanner(context);
+                }
                 final letter = filteredLetters[index];
                 final letterIdx = _letters.indexOf(letter);
                 final isPlaying = _playingIndex == letterIdx;
@@ -342,115 +378,123 @@ class _LettersPageState extends State<LettersPage> {
                               Column(
                                 crossAxisAlignment: CrossAxisAlignment.end,
                                 children: [
-                                  Text(
-                                    letter.name,
-                                    style: GoogleFonts.cairo(
-                                      fontSize: 26,
-                                      fontWeight: FontWeight.w900,
-                                      color: letter.color,
-                                      height: 1.2,
+                                  if (_settingsService.showArabic)
+                                    Text(
+                                      letter.name,
+                                      style: GoogleFonts.cairo(
+                                        fontSize: 26,
+                                        fontWeight: FontWeight.w900,
+                                        color: letter.color,
+                                        height: 1.2,
+                                      ),
                                     ),
-                                  ),
-                                  const SizedBox(height: 4),
-                                  Text(
-                                    '${_langService.translate('pronunciation_label')}: ${letter.phonetic}',
-                                    style: GoogleFonts.cairo(
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w800,
-                                      color: const Color(0xFF64748B),
+                                  if (_settingsService.showArabic && _settingsService.showPronunciation)
+                                    const SizedBox(height: 4),
+                                  if (_settingsService.showPronunciation)
+                                    Text(
+                                      '${_langService.translate('pronunciation_label')}: ${letter.phonetic}',
+                                      style: GoogleFonts.cairo(
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w800,
+                                        color: const Color(0xFF64748B),
+                                      ),
                                     ),
-                                  ),
                                 ],
                               )
                             ],
                           ),
-                          const SizedBox(height: 20),
-                          // Bottom Section: Glyph & Rules
-                          Row(
-                            crossAxisAlignment: CrossAxisAlignment.end,
-                            children: [
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.end,
-                                  children: letter.rules.map((rule) {
-                                    return Container(
-                                      margin: const EdgeInsets.only(bottom: 8),
-                                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                                      decoration: BoxDecoration(
-                                        color: Colors.white.withValues(alpha: 0.65),
-                                        borderRadius: BorderRadius.circular(16),
-                                        border: Border.all(color: Colors.white.withValues(alpha: 0.45)),
-                                      ),
-                                      child: Row(
-                                        mainAxisSize: MainAxisSize.min,
-                                        mainAxisAlignment: MainAxisAlignment.end,
-                                        children: [
-                                          Flexible(
-                                            child: Text(
-                                              rule.text,
-                                              textAlign: TextAlign.right,
-                                              textDirection: TextDirection.rtl,
-                                              style: GoogleFonts.cairo(
-                                                fontSize: 12,
-                                                fontWeight: FontWeight.w800,
-                                                color: const Color(0xFF334155),
-                                              ),
-                                            ),
+                          if (_settingsService.showArabic || _settingsService.showCoptic) ...[
+                            const SizedBox(height: 20),
+                            // Bottom Section: Glyph & Rules
+                            Row(
+                              crossAxisAlignment: CrossAxisAlignment.end,
+                              children: [
+                                if (_settingsService.showArabic) ...[
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.end,
+                                      children: letter.rules.map((rule) {
+                                        return Container(
+                                          margin: const EdgeInsets.only(bottom: 8),
+                                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                                          decoration: BoxDecoration(
+                                            color: Colors.white.withValues(alpha: 0.65),
+                                            borderRadius: BorderRadius.circular(16),
+                                            border: Border.all(color: Colors.white.withValues(alpha: 0.45)),
                                           ),
-                                          const SizedBox(width: 8),
-                                          Container(
-                                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
-                                            decoration: BoxDecoration(
-                                              color: letter.color.withValues(alpha: 0.12),
-                                              borderRadius: BorderRadius.circular(8),
-                                              border: Border.all(color: letter.color.withValues(alpha: 0.2)),
-                                            ),
-                                            child: Text(
-                                              rule.label ?? '•',
-                                              style: GoogleFonts.cairo(
-                                                color: letter.color,
-                                                fontWeight: FontWeight.bold,
-                                                fontSize: 11,
+                                          child: Row(
+                                            mainAxisSize: MainAxisSize.min,
+                                            mainAxisAlignment: MainAxisAlignment.end,
+                                            children: [
+                                              Flexible(
+                                                child: Text(
+                                                  rule.text,
+                                                  textAlign: TextAlign.right,
+                                                  textDirection: TextDirection.rtl,
+                                                  style: GoogleFonts.cairo(
+                                                    fontSize: 12,
+                                                    fontWeight: FontWeight.w800,
+                                                    color: const Color(0xFF334155),
+                                                  ),
+                                                ),
                                               ),
-                                            ),
+                                              const SizedBox(width: 8),
+                                              Container(
+                                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+                                                decoration: BoxDecoration(
+                                                  color: letter.color.withValues(alpha: 0.12),
+                                                  borderRadius: BorderRadius.circular(8),
+                                                  border: Border.all(color: letter.color.withValues(alpha: 0.2)),
+                                                ),
+                                                child: Text(
+                                                  rule.label ?? '•',
+                                                  style: GoogleFonts.cairo(
+                                                    color: letter.color,
+                                                    fontWeight: FontWeight.bold,
+                                                    fontSize: 11,
+                                                  ),
+                                                ),
+                                              ),
+                                            ],
                                           ),
-                                        ],
-                                      ),
-                                    );
-                                  }).toList(),
-                                ),
-                              ),
-                              const SizedBox(width: 14),
-                              Row(
-                                crossAxisAlignment: CrossAxisAlignment.baseline,
-                                textBaseline: TextBaseline.alphabetic,
-                                children: [
-                                  Text(
-                                    letter.small,
-                                    style: TextStyle(
-                                      fontFamily: _getCopticFontFamily(letter.small),
-                                      fontFamilyFallback: const ['CopticStandard', 'Antinoou'],
-                                      fontSize: 44,
-                                      fontWeight: FontWeight.bold,
-                                      color: letter.color.withValues(alpha: 0.6),
+                                        );
+                                      }).toList(),
                                     ),
                                   ),
-                                  const SizedBox(width: 6),
-                                  Text(
-                                    letter.char,
-                                    style: TextStyle(
-                                      fontFamily: _getCopticFontFamily(letter.char),
-                                      fontFamilyFallback: const ['CopticStandard', 'Antinoou'],
-                                      fontSize: 90,
-                                      fontWeight: FontWeight.w900,
-                                      color: letter.color,
-                                      height: 1.0,
-                                    ),
-                                  ),
+                                  if (_settingsService.showCoptic) const SizedBox(width: 14),
                                 ],
-                              ),
-                            ],
-                          ),
+                                if (_settingsService.showCoptic)
+                                  Row(
+                                    crossAxisAlignment: CrossAxisAlignment.baseline,
+                                    textBaseline: TextBaseline.alphabetic,
+                                    children: [
+                                      Text(
+                                        letter.small,
+                                        style: TextStyle(
+                                          fontFamily: _getCopticFontFamily(letter.small),
+                                          fontFamilyFallback: const ['CopticStandard', 'Antinoou'],
+                                          fontSize: 44,
+                                          fontWeight: FontWeight.bold,
+                                          color: letter.color.withValues(alpha: 0.6),
+                                        ),
+                                      ),
+                                      const SizedBox(width: 6),
+                                      Text(
+                                        letter.char,
+                                        style: TextStyle(
+                                          fontFamily: _getCopticFontFamily(letter.char),
+                                          fontFamilyFallback: const ['CopticStandard', 'Antinoou'],
+                                          fontSize: 90,
+                                          fontWeight: FontWeight.w900,
+                                          color: letter.color,
+                                          height: 1.0,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                              ],
+                            ),
+                          ],
                         ],
                       ),
                     ),

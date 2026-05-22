@@ -51,6 +51,14 @@ class LanguageService extends ChangeNotifier {
       AppLanguage.ar: 'هذا التطبيق تم بكل حب ومودة من أجلكم\nبواسطة خدام كنيسة الشهيد العظيم أبي سيفين والشهيدة دميانة بشبرا\n\nمهرجان الكرازة ٢٠٢٦',
       AppLanguage.en: 'This app was made with love, for you,\nby the servants of St. Mercurius & St. Demiana Church, Shubra.\n\nMahragan Al-Keraza 2026',
     },
+    'web_version': {
+      AppLanguage.ar: 'نسخة الويب (أيفون وكمبيوتر)',
+      AppLanguage.en: 'Web Version (iPhone & Desktop)',
+    },
+    'android_app': {
+      AppLanguage.ar: 'تطبيق الأندرويد',
+      AppLanguage.en: 'Android App',
+    },
     'close': {
       AppLanguage.ar: 'إغلاق',
       AppLanguage.en: 'Close',
@@ -218,5 +226,42 @@ class LanguageService extends ChangeNotifier {
       AppLanguage.ar: 'عدد',
       AppLanguage.en: 'Num',
     },
+    'settings_title': {
+      AppLanguage.ar: 'الإعدادات',
+      AppLanguage.en: 'Settings',
+    },
+    'audio_speed': {
+      AppLanguage.ar: 'سرعة الصوت',
+      AppLanguage.en: 'Audio Speed',
+    },
+    'show_coptic': {
+      AppLanguage.ar: 'إظهار الكلمة القبطية',
+      AppLanguage.en: 'Show Coptic',
+    },
+    'show_pronunciation': {
+      AppLanguage.ar: 'إظهار النطق',
+      AppLanguage.en: 'Show Pronunciation',
+    },
+    'show_meaning': {
+      AppLanguage.ar: 'إظهار المعنى بالعربية',
+      AppLanguage.en: 'Show Meaning',
+    },
+    'show_image': {
+      AppLanguage.ar: 'إظهار الصورة',
+      AppLanguage.en: 'Show Image',
+    },
+    'speed_normal': {
+      AppLanguage.ar: 'طبيعي',
+      AppLanguage.en: 'Normal',
+    },
+    'warning_title': {
+      AppLanguage.ar: 'تنبيه',
+      AppLanguage.en: 'Warning',
+    },
+    'ok': {
+      AppLanguage.ar: 'موافق',
+      AppLanguage.en: 'OK',
+    },
   };
 }
+

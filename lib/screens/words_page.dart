@@ -6,6 +6,10 @@ import 'package:google_fonts/google_fonts.dart';
 import '../services/stage_service.dart';
 import '../services/language_service.dart';
 import '../services/audio_service.dart';
+import '../services/settings_service.dart';
+import '../widgets/settings_bottom_sheet.dart';
+import '../utils/donation_utils.dart';
+
 
 Map<String, dynamic> _parseWordsJson(String jsonString) {
   return jsonDecode(jsonString) as Map<String, dynamic>;
@@ -46,14 +50,12 @@ class _WordsPageState extends State<WordsPage> {
   final StageService _stageService = StageService();
   final LanguageService _langService = LanguageService();
   final AudioService _audioService = AudioService();
+  final SettingsService _settingsService = SettingsService();
   Map<String, dynamic> _allWordsJson = {};
   List<WordData> _words = [];
   bool _isLoading = true;
   String _selectedLetter = "all";
   final String _searchQuery = "";
-  bool _showCoptic = true;
-  bool _showArabic = true;
-  bool _showPronunciation = true;
   final ValueNotifier<String?> _currentlyPlayingNotifier = ValueNotifier<String?>(null);
 
   String _getCopticFontFamily(String text) {
@@ -71,6 +73,7 @@ class _WordsPageState extends State<WordsPage> {
     super.initState();
     _stageService.addListener(_onStageChanged);
     _langService.addListener(_onLanguageChanged);
+    _settingsService.addListener(_onSettingsChanged);
     _loadData();
     _audioService.setOnComplete(() {
       if (mounted) _currentlyPlayingNotifier.value = null;
@@ -82,8 +85,13 @@ class _WordsPageState extends State<WordsPage> {
     _audioService.stop();
     _stageService.removeListener(_onStageChanged);
     _langService.removeListener(_onLanguageChanged);
+    _settingsService.removeListener(_onSettingsChanged);
     _currentlyPlayingNotifier.dispose();
     super.dispose();
+  }
+
+  void _onSettingsChanged() {
+    if (mounted) setState(() {});
   }
 
   void _onLanguageChanged() {
@@ -207,18 +215,39 @@ class _WordsPageState extends State<WordsPage> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.08),
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.2)),
-                  ),
-                  child: Icon(
-                    Icons.menu_book_rounded,
-                    color: Theme.of(context).colorScheme.primary,
-                    size: 22,
-                  ),
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.08),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.2)),
+                      ),
+                      child: Icon(
+                        Icons.menu_book_rounded,
+                        color: Theme.of(context).colorScheme.primary,
+                        size: 22,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    GestureDetector(
+                      onTap: () => SettingsBottomSheet.show(context, showImageOption: true),
+                      child: Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.08),
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.2)),
+                        ),
+                        child: Icon(
+                          Icons.settings_rounded,
+                          color: Theme.of(context).colorScheme.primary,
+                          size: 22,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.end,
@@ -315,8 +344,11 @@ class _WordsPageState extends State<WordsPage> {
                 ? ListView.builder(
                     padding: const EdgeInsets.only(left: 20, right: 20, top: 12, bottom: 120),
                     cacheExtent: 500, // Increased cache extent for smoother scrolling
-                    itemCount: filteredWords.length,
+                    itemCount: filteredWords.length + 1,
                     itemBuilder: (context, index) {
+                      if (index == filteredWords.length) {
+                        return DonationUtils.buildDonationBanner(context);
+                      }
                       final word = filteredWords[index];
 
                       return ValueListenableBuilder<String?>(
@@ -386,7 +418,7 @@ class _WordsPageState extends State<WordsPage> {
                                   ),
                                   child: ClipRRect(
                                     borderRadius: BorderRadius.circular(22),
-                                    child: word.imagePath != null
+                                    child: (word.imagePath != null && _settingsService.showImage)
                                         ? Image.asset(
                                             word.imagePath!,
                                             fit: BoxFit.contain,
@@ -427,7 +459,7 @@ class _WordsPageState extends State<WordsPage> {
                                   child: Column(
                                     crossAxisAlignment: CrossAxisAlignment.end,
                                     children: [
-                                      if (_showCoptic)
+                                      if (_settingsService.showCoptic)
                                         FittedBox(
                                           fit: BoxFit.scaleDown,
                                           alignment: Alignment.centerRight,
@@ -442,9 +474,9 @@ class _WordsPageState extends State<WordsPage> {
                                             ),
                                           ),
                                         ),
-                                      if (_showCoptic && (_showPronunciation || _showArabic))
+                                      if (_settingsService.showCoptic && (_settingsService.showPronunciation || _settingsService.showArabic))
                                         const SizedBox(height: 2),
-                                      if (_showPronunciation)
+                                      if (_settingsService.showPronunciation)
                                         Row(
                                           mainAxisAlignment: MainAxisAlignment.end,
                                           children: [
@@ -470,9 +502,9 @@ class _WordsPageState extends State<WordsPage> {
                                             ),
                                           ],
                                         ),
-                                      if (_showPronunciation && _showArabic)
+                                      if (_settingsService.showPronunciation && _settingsService.showArabic)
                                         const SizedBox(height: 4),
-                                      if (_showArabic)
+                                      if (_settingsService.showArabic)
                                         Row(
                                           mainAxisAlignment: MainAxisAlignment.end,
                                           children: [

@@ -299,6 +299,8 @@ class _HomePageState extends State<HomePage> {
               );
             },
           ),
+          const SizedBox(height: 20),
+          DonationUtils.buildDonationBanner(context),
           const SizedBox(height: 32),
         ],
       ),
@@ -319,10 +321,89 @@ class _HomePageState extends State<HomePage> {
               textAlign: TextAlign.center,
               style: GoogleFonts.cairo(fontWeight: FontWeight.w900),
             ),
-            content: Text(
-              _langService.translate('about_content'),
-              textAlign: TextAlign.center,
-              style: GoogleFonts.cairo(fontWeight: FontWeight.bold, height: 1.5, fontSize: 14),
+            content: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Text(
+                    _langService.translate('about_content'),
+                    textAlign: TextAlign.center,
+                    style: GoogleFonts.cairo(
+                      fontWeight: FontWeight.bold,
+                      height: 1.5,
+                      fontSize: 14,
+                      color: const Color(0xFF1C1917),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  InkWell(
+                    onTap: () async {
+                      final url = Uri.parse('https://coptic-web.philopater41.workers.dev/');
+                      try {
+                        await launchUrl(url, mode: LaunchMode.externalApplication);
+                      } catch (_) {}
+                    },
+                    borderRadius: BorderRadius.circular(16),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFB45309).withValues(alpha: 0.08),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: const Color(0xFFB45309).withValues(alpha: 0.2)),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Icon(Icons.language_rounded, color: Color(0xFFB45309), size: 20),
+                          const SizedBox(width: 8),
+                          Text(
+                            _langService.translate('web_version'),
+                            style: GoogleFonts.cairo(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 13,
+                              color: const Color(0xFFB45309),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  InkWell(
+                    onTap: () async {
+                      final url = Uri.parse('https://play.google.com/store/apps/details?id=com.atger.ebty&pcampaignid=web_share');
+                      try {
+                        await launchUrl(url, mode: LaunchMode.externalApplication);
+                      } catch (_) {}
+                    },
+                    borderRadius: BorderRadius.circular(16),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF10B981).withValues(alpha: 0.08),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: const Color(0xFF10B981).withValues(alpha: 0.2)),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const FaIcon(FontAwesomeIcons.googlePlay, color: Color(0xFF10B981), size: 16),
+                          const SizedBox(width: 8),
+                          Text(
+                            _langService.translate('android_app'),
+                            style: GoogleFonts.cairo(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 13,
+                              color: const Color(0xFF10B981),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
             actions: [
               TextButton(

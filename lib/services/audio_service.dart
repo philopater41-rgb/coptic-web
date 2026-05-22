@@ -38,8 +38,8 @@ class AudioService {
 
     try {
       await _player.stop();
-      await _player.setPlaybackRate(_speed);
       await _player.play(AssetSource(cleanPath));
+      await _player.setPlaybackRate(_speed);
     } catch (e) {
       final errorStr = e.toString();
       // Rapid taps can race; ignore those benign errors.

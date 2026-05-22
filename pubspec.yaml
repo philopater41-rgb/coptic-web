@@ -35,6 +35,7 @@ flutter:
     - assets/images/words/p56/
     - assets/images/words/prep/
     - assets/images/words/uni/
+    - assets/images/words/sn/
     - assets/audio/letters/
     - assets/audio/words/
     - assets/audio/words/grad/
@@ -51,6 +52,7 @@ flutter:
     - assets/audio/words/serv/
     - assets/audio/words/st/
     - assets/audio/words/uni/
+    - assets/audio/words/sn/
     - assets/audio/hymns/
     - assets/audio/hymns/grad/
     - assets/audio/hymns/grad/lvl1/

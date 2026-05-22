@@ -8,6 +8,10 @@ import '../services/stage_service.dart';
 import '../services/language_service.dart';
 import '../services/bookmark_service.dart';
 import '../services/audio_service.dart';
+import '../services/settings_service.dart';
+import '../widgets/settings_bottom_sheet.dart';
+import '../utils/donation_utils.dart';
+
 
 Map<String, dynamic> _parseHymnsJson(String jsonString) {
   return jsonDecode(jsonString) as Map<String, dynamic>;
@@ -25,14 +29,12 @@ class _HymnsPageState extends State<HymnsPage> {
   final LanguageService _langService = LanguageService();
   final BookmarkService _bookmarkService = BookmarkService();
   final AudioService _audioService = AudioService();
+  final SettingsService _settingsService = SettingsService();
 
   Map<String, dynamic> _allHymnsJson = {};
   List<HymnItem> _hymns = [];
   bool _isLoading = true;
 
-  bool _showCoptic = true;
-  bool _showArabic = true;
-  bool _showPhonetic = true;
   int _activeHymnIndex = 0;
   final ValueNotifier<String?> _currentlyPlayingNotifier = ValueNotifier<String?>(null);
 
@@ -52,6 +54,7 @@ class _HymnsPageState extends State<HymnsPage> {
     _stageService.addListener(_onStageChanged);
     _bookmarkService.addListener(_update);
     _langService.addListener(_onLanguageChanged);
+    _settingsService.addListener(_onSettingsChanged);
     _loadData();
     _audioService.setOnComplete(() {
       if (mounted) _currentlyPlayingNotifier.value = null;
@@ -64,8 +67,13 @@ class _HymnsPageState extends State<HymnsPage> {
     _stageService.removeListener(_onStageChanged);
     _bookmarkService.removeListener(_update);
     _langService.removeListener(_onLanguageChanged);
+    _settingsService.removeListener(_onSettingsChanged);
     _currentlyPlayingNotifier.dispose();
     super.dispose();
+  }
+
+  void _onSettingsChanged() {
+    if (mounted) setState(() {});
   }
 
   void _update() {
@@ -204,18 +212,39 @@ class _HymnsPageState extends State<HymnsPage> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.08),
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.2)),
-                  ),
-                  child: Icon(
-                    Icons.headphones_rounded,
-                    color: Theme.of(context).colorScheme.primary,
-                    size: 22,
-                  ),
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.08),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.2)),
+                      ),
+                      child: Icon(
+                        Icons.headphones_rounded,
+                        color: Theme.of(context).colorScheme.primary,
+                        size: 22,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    GestureDetector(
+                      onTap: () => SettingsBottomSheet.show(context, showImageOption: false),
+                      child: Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.08),
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.2)),
+                        ),
+                        child: Icon(
+                          Icons.settings_rounded,
+                          color: Theme.of(context).colorScheme.primary,
+                          size: 22,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.end,
@@ -297,8 +326,11 @@ class _HymnsPageState extends State<HymnsPage> {
             child: ListView.builder(
               padding: const EdgeInsets.only(left: 20, right: 20, top: 12, bottom: 120),
               cacheExtent: 500, // Pre-loads items to eliminate scroll stutter
-              itemCount: currentHymn.verses.length,
+              itemCount: currentHymn.verses.length + 1,
               itemBuilder: (context, index) {
+                if (index == currentHymn.verses.length) {
+                  return DonationUtils.buildDonationBanner(context);
+                }
                 final verse = currentHymn.verses[index];
                 final isFav = _bookmarkService.isBookmarked(verse);
 
@@ -386,7 +418,7 @@ class _HymnsPageState extends State<HymnsPage> {
                           const SizedBox(height: 18),
 
                           // Coptic Text
-                          if (_showCoptic)
+                          if (_settingsService.showCoptic)
                             Text(
                               verse.coptic,
                               textAlign: TextAlign.right,
@@ -401,23 +433,23 @@ class _HymnsPageState extends State<HymnsPage> {
                             ),
 
                           // Phonetics
-                          if (_showPhonetic) ...[
+                          if (_settingsService.showPronunciation) ...[
                             const SizedBox(height: 6),
                             Text(
                               '[ ${verse.phonetic} ]',
                               textAlign: TextAlign.right,
                               textDirection: TextDirection.rtl,
                               style: GoogleFonts.cairo(
-                                fontSize: 13,
-                                fontWeight: FontWeight.bold,
-                                fontStyle: FontStyle.italic,
-                                color: Theme.of(context).colorScheme.primary,
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.bold,
+                                  fontStyle: FontStyle.italic,
+                                  color: Theme.of(context).colorScheme.primary,
                               ),
                             ),
                           ],
 
                           // Divider Line
-                          if ((_showCoptic || _showPhonetic) && _showArabic) ...[
+                          if ((_settingsService.showCoptic || _settingsService.showPronunciation) && _settingsService.showArabic) ...[
                             const SizedBox(height: 12),
                             Container(
                               height: 1,
@@ -427,7 +459,7 @@ class _HymnsPageState extends State<HymnsPage> {
                           ],
 
                           // Arabic Text
-                          if (_showArabic)
+                          if (_settingsService.showArabic)
                             Text(
                               verse.arabic,
                               textAlign: TextAlign.right,

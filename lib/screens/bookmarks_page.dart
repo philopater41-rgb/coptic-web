@@ -4,6 +4,7 @@ import '../models/hymn_models.dart';
 import '../services/bookmark_service.dart';
 import '../services/audio_service.dart';
 import '../services/language_service.dart';
+import '../utils/donation_utils.dart';
 
 class BookmarksPage extends StatefulWidget {
   const BookmarksPage({super.key});
@@ -132,8 +133,11 @@ class _BookmarksPageState extends State<BookmarksPage> {
           child: bookmarked.isNotEmpty
               ? ListView.builder(
                   padding: const EdgeInsets.only(left: 20, right: 20, top: 12, bottom: 120),
-                  itemCount: bookmarked.length,
+                  itemCount: bookmarked.length + 1,
                   itemBuilder: (context, index) {
+                    if (index == bookmarked.length) {
+                      return DonationUtils.buildDonationBanner(context);
+                    }
                     final verse = bookmarked[index];
                     final isPlaying = _currentlyPlayingId == verse.id;
 

@@ -4,6 +4,7 @@ import 'package:flutter/services.dart' show rootBundle;
 import 'package:google_fonts/google_fonts.dart';
 import '../services/stage_service.dart';
 import '../services/language_service.dart';
+import '../utils/donation_utils.dart';
 
 Map<String, dynamic> _parseGrammarJson(String jsonString) {
   return jsonDecode(jsonString) as Map<String, dynamic>;
@@ -608,6 +609,7 @@ class _GrammarEnPageState extends State<GrammarEnPage> {
                     ),
                   ),
                 ),
+                DonationUtils.buildDonationBanner(context),
               ],
             ),
           ),
