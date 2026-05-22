@@ -9,12 +9,25 @@ function getAudioEl() {
   if (!_audioEl) {
     _audioEl = new Audio();
     _audioEl.preload = 'auto';
+    
+    // Add ended event listener once upon creation to be extremely robust
+    _audioEl.addEventListener('ended', function() {
+      console.log('webAudioHelper: audio playback ended');
+      if (window.webAudioOnEnded) {
+        try {
+          window.webAudioOnEnded();
+        } catch(e) {
+          console.error('webAudioHelper: error invoking webAudioOnEnded callback', e);
+        }
+      }
+    });
   }
   return _audioEl;
 }
 
 function webPlayAudio(url, speed) {
   try {
+    console.log('webAudioHelper: webPlayAudio url =', url, 'speed =', speed);
     var el = getAudioEl();
     el.pause();
     el.currentTime = 0;
@@ -65,8 +78,9 @@ function webIsPlaying() {
 }
 
 function webOnAudioEnded(callback) {
-  var el = getAudioEl();
-  el.onended = callback;
+  // webAudioOnEnded is now bound to the window object in Dart, 
+  // and getAudioEl() listens to 'ended' event and delegates to window.webAudioOnEnded.
+  // This function is kept for backward compatibility.
 }
 
 function webSetAudioSpeed(speed) {

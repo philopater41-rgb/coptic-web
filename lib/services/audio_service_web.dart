@@ -15,17 +15,16 @@ class AudioService {
   Timer? _positionTimer;
 
   AudioService._internal() {
-    // Register the completion callback with JS
+    // Register the completion callback with JS.
+    // Wrap it using allowInterop.
     js.context['webAudioOnEnded'] = js.allowInterop(() {
       _stopTimer();
       _positionController.add(Duration.zero);
       if (_onCompleteCallback != null) {
+        // Run the callback to notify listeners
         _onCompleteCallback!();
       }
     });
-    
-    // Bind to the HTMLAudioElement's onended event
-    js.context.callMethod('webOnAudioEnded', [js.context['webAudioOnEnded']]);
   }
 
   Stream<Duration> get onPositionChanged => _positionController.stream;
@@ -41,7 +40,12 @@ class AudioService {
   }
 
   void setOnComplete(void Function() callback) {
-    _onCompleteCallback = callback;
+    // Capture the current Dart/Flutter Zone so that when JS invokes the callback,
+    // the callback executes in the correct zone. This ensures setState triggers UI updates.
+    final zone = Zone.current;
+    _onCompleteCallback = () {
+      zone.run(callback);
+    };
   }
 
   void _startTimer() {
