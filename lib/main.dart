@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'dart:ui';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'screens/home_page.dart';
 import 'screens/letters_page.dart';
 import 'screens/words_page.dart';
@@ -12,6 +13,8 @@ import 'services/stage_service.dart';
 import 'services/language_service.dart';
 
 void main() {
+  WidgetsBinding widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
+  FlutterNativeSplash.remove();
   runApp(const MyApp());
 }
 
