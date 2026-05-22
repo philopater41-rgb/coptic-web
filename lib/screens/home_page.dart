@@ -4,7 +4,8 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import '../services/stage_service.dart';
-import '../services/language_service.dart';
+import '../utils/donation_utils.dart';
+import '../widgets/settings_bottom_sheet.dart';
 
 class HomePage extends StatefulWidget {
   final Function(int) onNavigateTo;
@@ -17,20 +18,34 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   final StageService _stageService = StageService();
-  final LanguageService _langService = LanguageService();
 
+  // Curated vivid Tailwind 50 -> 500 palette to eliminate any color repeating
+  final Map<String, Map<String, Color>> _stageColors = {
+    'nursery': {'bg': const Color(0xFFFEF2F2), 'border': const Color(0xFFEF4444)},
+    'primary12': {'bg': const Color(0xFFFFFBEB), 'border': const Color(0xFFF59E0B)},
+    'primary34': {'bg': const Color(0xFFECFDF5), 'border': const Color(0xFF10B981)},
+    'primary56': {'bg': const Color(0xFFECFEFF), 'border': const Color(0xFF06B6D4)},
+    'prep': {'bg': const Color(0xFFFDF2F8), 'border': const Color(0xFFEC4899)},
+    'sec': {'bg': const Color(0xFFEEF2FF), 'border': const Color(0xFF6366F1)},
+    'qana': {'bg': const Color(0xFFF0FDFA), 'border': const Color(0xFF14B8A6)},
+    'uni': {'bg': const Color(0xFFF5F3FF), 'border': const Color(0xFF8B5CF6)},
+    'graduates': {'bg': const Color(0xFFEFF6FF), 'border': const Color(0xFF3B82F6)},
+    'servants': {'bg': const Color(0xFFFAF5FF), 'border': const Color(0xFFA855F7)},
+    'servants_trainees': {'bg': const Color(0xFFF7FEE7), 'border': const Color(0xFF84CC16)},
+    'special_needs_simple': {'bg': const Color(0xFFECFDF5), 'border': const Color(0xFF10B981)},
+    'special_needs_average': {'bg': const Color(0xFFFFF7ED), 'border': const Color(0xFFF97316)},
+    'special_needs_advanced': {'bg': const Color(0xFFFDF2F8), 'border': const Color(0xFFEC4899)},
+  };
 
   @override
   void initState() {
     super.initState();
     _stageService.addListener(_updateState);
-    _langService.addListener(_updateState);
   }
 
   @override
   void dispose() {
     _stageService.removeListener(_updateState);
-    _langService.removeListener(_updateState);
     super.dispose();
   }
 
@@ -83,31 +98,7 @@ class _HomePageState extends State<HomePage> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              GestureDetector(
-                onTap: () {
-                  _langService.setLanguage(
-                    _langService.isArabic ? AppLanguage.en : AppLanguage.ar
-                  );
-                },
-                child: Container(
-                  width: 48,
-                  height: 48,
-                  alignment: Alignment.center,
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.2)),
-                  ),
-                  child: Text(
-                    _langService.isArabic ? 'EN' : 'عربي',
-                    style: GoogleFonts.cairo(
-                      color: Theme.of(context).colorScheme.primary,
-                      fontWeight: FontWeight.w900,
-                      fontSize: 13,
-                    ),
-                  ),
-                ),
-              ),
+              const SizedBox(), // Spacer
               Row(
                 children: [
                   GestureDetector(
@@ -123,9 +114,22 @@ class _HomePageState extends State<HomePage> {
                       child: const Icon(Icons.phone_rounded, color: Color(0xFF64748B), size: 22),
                     ),
                   ),
+                  const SizedBox(width: 8),
+                  GestureDetector(
+                    onTap: () => DonationUtils.showDonationDialog(context),
+                    child: Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFB45309).withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: const Color(0xFFB45309).withValues(alpha: 0.2)),
+                      ),
+                      child: const Icon(Icons.volunteer_activism_rounded, color: Color(0xFFB45309), size: 22),
+                    ),
+                  ),
                   const SizedBox(width: 12),
                   GestureDetector(
-                    onTap: () => _showInfoDialog(context),
+                    onTap: () => showSettingsBottomSheet(context),
                     child: Container(
                       padding: const EdgeInsets.all(10),
                       decoration: BoxDecoration(
@@ -133,7 +137,7 @@ class _HomePageState extends State<HomePage> {
                         borderRadius: BorderRadius.circular(16),
                         border: Border.all(color: Colors.white.withValues(alpha: 0.55)),
                       ),
-                      child: const Icon(Icons.info_outline_rounded, color: Color(0xFF64748B), size: 22),
+                      child: const Icon(Icons.settings_rounded, color: Color(0xFF64748B), size: 22),
                     ),
                   ),
                 ],
@@ -159,19 +163,13 @@ class _HomePageState extends State<HomePage> {
                 ),
                 const SizedBox(height: 24),
                 Text(
-                  _langService.translate('app_title'),
+                  'منهج القبطي - مهرجان الكرازة المرقسية',
                   textAlign: TextAlign.center,
-                  style: _langService.isArabic 
-                    ? GoogleFonts.cairo(
-                        fontSize: 20,
-                        fontWeight: FontWeight.w900,
-                        color: const Color(0xFF1c1917),
-                      )
-                    : GoogleFonts.poppins(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w900,
-                        color: const Color(0xFF1c1917),
-                      ),
+                  style: GoogleFonts.cairo(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w900,
+                    color: const Color(0xFF1c1917),
+                  ),
                 ),
                 const SizedBox(height: 8),
                 Container(
@@ -187,18 +185,12 @@ class _HomePageState extends State<HomePage> {
                       const Icon(Icons.auto_awesome_rounded, size: 14, color: Color(0xFFB45309)),
                       const SizedBox(width: 6),
                       Text(
-                        _langService.translate('year_2026'),
-                        style: _langService.isArabic 
-                          ? GoogleFonts.cairo(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w900,
-                              color: const Color(0xFFB45309),
-                            )
-                          : GoogleFonts.poppins(
-                              fontSize: 10,
-                              fontWeight: FontWeight.w800,
-                              color: const Color(0xFFB45309),
-                            ),
+                        'سنة ٢٠٢٦',
+                        style: GoogleFonts.cairo(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w900,
+                          color: const Color(0xFFB45309),
+                        ),
                       ),
                     ],
                   ),
@@ -224,8 +216,7 @@ class _HomePageState extends State<HomePage> {
             itemBuilder: (context, index) {
               final stage = _stageService.stages[index];
               final isSelected = _stageService.selectedStage.id == stage.id;
-              final accent = stage.accent;
-              final bg = stage.color;
+              final colMap = _stageColors[stage.id] ?? {'bg': Colors.white, 'border': const Color(0xFFB45309)};
 
               return GestureDetector(
                 onTap: () {
@@ -235,18 +226,18 @@ class _HomePageState extends State<HomePage> {
                   duration: const Duration(milliseconds: 300),
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                   decoration: BoxDecoration(
-                    color: isSelected
-                        ? accent
-                        : bg.withValues(alpha: 0.85),
+                    color: isSelected 
+                        ? (colMap['border'] ?? const Color(0xFFB45309))
+                        : (colMap['bg'] ?? Colors.white).withValues(alpha: 0.85),
                     borderRadius: BorderRadius.circular(24),
                     border: Border.all(
-                      color: isSelected ? Colors.white.withValues(alpha: 0.5) : accent.withValues(alpha: 0.3),
+                      color: isSelected ? Colors.white.withValues(alpha: 0.5) : (colMap['border'] ?? const Color(0xFFB45309)).withValues(alpha: 0.3),
                       width: isSelected ? 2.5 : 1,
                     ),
                     boxShadow: [
                       BoxShadow(
-                        color: isSelected
-                          ? accent.withValues(alpha: 0.4)
+                        color: isSelected 
+                          ? (colMap['border'] ?? const Color(0xFFB45309)).withValues(alpha: 0.4)
                           : Colors.black.withValues(alpha: 0.02),
                         blurRadius: 6,
                         offset: const Offset(0, 4),
@@ -264,19 +255,13 @@ class _HomePageState extends State<HomePage> {
                       Align(
                         alignment: Alignment.center,
                         child: Text(
-                          _langService.translate(stage.id),
+                          stage.name,
                           textAlign: TextAlign.center,
-                          style: _langService.isArabic
-                            ? GoogleFonts.cairo(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w900,
-                                color: isSelected ? Colors.white : const Color(0xFF1C1917),
-                              )
-                            : GoogleFonts.poppins(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w800,
-                                color: isSelected ? Colors.white : const Color(0xFF1C1917),
-                              ),
+                          style: GoogleFonts.cairo(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w900,
+                            color: isSelected ? Colors.white : const Color(0xFF1C1917),
+                          ),
                         ),
                       ),
                     ],
@@ -286,44 +271,15 @@ class _HomePageState extends State<HomePage> {
             },
           ),
           const SizedBox(height: 32),
+
+          DonationUtils.buildDonationBanner(context),
+          
+          const SizedBox(height: 24),
         ],
       ),
     );
   }
 
-  void _showInfoDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (context) {
-        return BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
-          child: AlertDialog(
-            backgroundColor: Colors.white.withValues(alpha: 0.85),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(32)),
-            title: Text(
-              _langService.translate('about_app'),
-              textAlign: TextAlign.center,
-              style: GoogleFonts.cairo(fontWeight: FontWeight.w900),
-            ),
-            content: Text(
-              _langService.translate('about_content'),
-              textAlign: TextAlign.center,
-              style: GoogleFonts.cairo(fontWeight: FontWeight.bold, height: 1.5, fontSize: 14),
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(),
-                child: Text(
-                  _langService.translate('close'), 
-                  style: GoogleFonts.cairo(color: const Color(0xFFB45309), fontWeight: FontWeight.w900)
-                ),
-              )
-            ],
-          ),
-        );
-      },
-    );
-  }
 
   void _showContactDialog(BuildContext context) {
     showDialog(
@@ -338,7 +294,7 @@ class _HomePageState extends State<HomePage> {
               side: const BorderSide(color: Colors.white, width: 1.5),
             ),
             title: Text(
-              _langService.translate('contact_us'),
+              'للتواصل معنا',
               textAlign: TextAlign.center,
               style: GoogleFonts.cairo(
                 fontWeight: FontWeight.w900,
@@ -352,12 +308,12 @@ class _HomePageState extends State<HomePage> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   _buildModernContactCard(
-                    name: _langService.translate('mina_joseph'),
+                    name: 'م. مينا چوزيف',
                     phone: '01098734124',
                   ),
                   const SizedBox(height: 12),
                   _buildModernContactCard(
-                    name: _langService.translate('philopater_joseph'),
+                    name: 'م. فيلوباتير چوزيف',
                     phone: '01210826678',
                   ),
                   const SizedBox(height: 12),
@@ -371,7 +327,7 @@ class _HomePageState extends State<HomePage> {
               TextButton(
                 onPressed: () => Navigator.of(context).pop(),
                 child: Text(
-                  _langService.translate('close'),
+                  'إغلاق',
                   style: GoogleFonts.cairo(
                     color: const Color(0xFFB45309),
                     fontWeight: FontWeight.w900,

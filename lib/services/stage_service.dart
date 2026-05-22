@@ -29,44 +29,39 @@ class StageService extends ChangeNotifier {
 
   StageService._internal();
 
-  // Colors match the per-stage palette shown on the home screen cards so
-  // theme chrome (nav, badges, dialogs, etc.) is the exact same shade as the
-  // stage button the user tapped.
   final List<Stage> stages = const [
-    Stage(id: "nursery",                  name: "حضانة",          color: Color(0xFFFEF2F2), accent: Color(0xFFEF4444), hideGrammar: true),
-    Stage(id: "primary12",                name: "أولى وتانية",     color: Color(0xFFFFFBEB), accent: Color(0xFFF59E0B), hideGrammar: true),
-    Stage(id: "primary34",                name: "تالتة ورابعة",    color: Color(0xFFECFDF5), accent: Color(0xFF10B981)),
-    Stage(id: "primary56",                name: "خامسة وسادسة",    color: Color(0xFFECFEFF), accent: Color(0xFF06B6D4)),
-    Stage(id: "prep",                     name: "إعدادي",         color: Color(0xFFFDF2F8), accent: Color(0xFFEC4899)),
-    Stage(id: "sec",                      name: "ثانوي",          color: Color(0xFFEEF2FF), accent: Color(0xFF6366F1)),
-    Stage(id: "qana",                     name: "قانا الجليل",     color: Color(0xFFF0FDFA), accent: Color(0xFF14B8A6)),
-    Stage(id: "uni",                      name: "جامعة",          color: Color(0xFFF5F3FF), accent: Color(0xFF8B5CF6)),
-    Stage(id: "graduates",                name: "خريجين",         color: Color(0xFFEFF6FF), accent: Color(0xFF3B82F6)),
-    Stage(id: "servants",                 name: "خدام",           color: Color(0xFFFAF5FF), accent: Color(0xFFA855F7)),
-    Stage(id: "servants_trainees",        name: "إعداد خدام",      color: Color(0xFFF7FEE7), accent: Color(0xFF84CC16)),
+    Stage(id: "nursery", name: "حضانة", color: Color(0xFFFFEBEE), accent: Color(0xFFC62828), hideGrammar: true),
+    Stage(id: "primary12", name: "أولى وتانية", color: Color(0xFFFFF8E1), accent: Color(0xFFE65100), hideGrammar: true),
+    Stage(id: "primary34", name: "تالتة ورابعة", color: Color(0xFFE8F5E9), accent: Color(0xFF2E7D32)),
+    Stage(id: "primary56", name: "خامسة وسادسة", color: Color(0xFFE3F2FD), accent: Color(0xFF1565C0)),
+    Stage(id: "prep", name: "إعدادي", color: Color(0xFFFCE4EC), accent: Color(0xFFC2185B)),
+    Stage(id: "sec", name: "ثانوي", color: Color(0xFFE8EAF6), accent: Color(0xFF283593)),
+    Stage(id: "qana", name: "قانا الجليل", color: Color(0xFFE0F7FA), accent: Color(0xFF00838F)),
+    Stage(id: "uni", name: "جامعة", color: Color(0xFFE0F2F1), accent: Color(0xFF00695C)),
+    Stage(id: "graduates", name: "خريجين", color: Color(0xFFE1F5FE), accent: Color(0xFF0277BD)),
+    Stage(id: "servants", name: "خدام", color: Color(0xFFEDE7F6), accent: Color(0xFF4527A0)),
+    Stage(id: "servants_trainees", name: "إعداد خدام", color: Color(0xFFF3E5F5), accent: Color(0xFF6A1B9A)),
     Stage(
-      id: "special_needs_simple",
-      name: "ذوي الهمم (بسيط)",
-      color: Color(0xFFFFF7ED),
-      accent: Color(0xFFF97316), // orange-500
+      id: "special_needs_simple", 
+      name: "ذوي الهمم (بسيط)", 
+      color: Color(0xFFE8F5E9), 
+      accent: Color(0xFF2E7D32),
       hideLetters: true,
-      hideWords: true,
       hideGrammar: true,
     ),
     Stage(
-      id: "special_needs_average",
-      name: "ذوي الهمم (متوسط)",
-      color: Color(0xFFFDF4FF),
-      accent: Color(0xFFD946EF), // fuchsia-500
+      id: "special_needs_average", 
+      name: "ذوي الهمم (متوسط)", 
+      color: Color(0xFFFFF3E0), 
+      accent: Color(0xFFE65100),
       hideLetters: true,
-      hideWords: true,
       hideGrammar: true,
     ),
     Stage(
-      id: "special_needs_advanced",
-      name: "ذوي الهمم (متميز)",
-      color: Color(0xFFF0F9FF),
-      accent: Color(0xFF0EA5E9), // sky-500
+      id: "special_needs_advanced", 
+      name: "ذوي الهمم (متميز)", 
+      color: Color(0xFFFCE4EC), 
+      accent: Color(0xFFC2185B),
       hideLetters: true,
       hideWords: true,
       hideGrammar: true,

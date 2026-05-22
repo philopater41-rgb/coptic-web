@@ -1,4 +1,4 @@
-import 'package:audioplayers/audioplayers.dart';
+import 'package:just_audio/just_audio.dart';
 import 'package:flutter/foundation.dart';
 
 /// A singleton service to manage audio playback across the entire app.
@@ -7,46 +7,82 @@ class AudioService {
   factory AudioService() => _instance;
 
   final AudioPlayer _player = AudioPlayer();
-  double _speed = 1.0;
   void Function()? _onCompleteCallback;
 
   AudioService._internal() {
-    _player.onPlayerComplete.listen((_) {
-      _onCompleteCallback?.call();
+    // just_audio handles web contexts much better than audioplayers.
+    // Listen for playback completion.
+    _player.playerStateStream.listen((state) {
+      if (state.processingState == ProcessingState.completed) {
+        if (_onCompleteCallback != null) {
+          _onCompleteCallback!();
+        }
+      }
     });
   }
 
   AudioPlayer get player => _player;
+  double _speed = 1.0;
 
-  /// audioplayers position stream — drop-in for just_audio's positionStream.
-  Stream<Duration> get onPositionChanged => _player.onPositionChanged;
+  double get speed => _speed;
 
-  /// audioplayers gives duration async, not as a sync getter.
-  Future<Duration?> getDuration() => _player.getDuration();
+  Future<void> setSpeed(double speed) async {
+    _speed = speed;
+    try {
+      await _player.setSpeed(speed);
+    } catch (e) {
+      debugPrint("AudioService setSpeed Error: $e");
+    }
+  }
 
   void setOnComplete(void Function() callback) {
     _onCompleteCallback = callback;
   }
 
-  /// Play an asset. Accepts paths with or without leading `/` or `assets/`.
+  bool _isProcessing = false;
+
   Future<void> playAsset(String path) async {
+    if (_isProcessing) {
+      try {
+        await _player.stop();
+      } catch (_) {}
+    }
+    _isProcessing = true;
+
+    // Clean path
     String cleanPath = path.trim();
     if (cleanPath.startsWith('/')) cleanPath = cleanPath.substring(1);
-    if (cleanPath.startsWith('assets/')) {
-      cleanPath = cleanPath.replaceFirst('assets/', '');
-    }
-
+    if (cleanPath.startsWith('assets/')) cleanPath = cleanPath.replaceFirst('assets/', '');
+    final assetPath = 'assets/$cleanPath';
+    
     try {
+      // 1. Stop and give the browser a moment to flush the audio buffer.
       await _player.stop();
-      await _player.setPlaybackRate(_speed);
-      await _player.play(AssetSource(cleanPath));
+      await Future.delayed(const Duration(milliseconds: 50));
+      
+      // 2. Load the source without pre-playing.
+      // We use Uri.parse('asset:///') for Flutter Web asset resolution.
+      await _player.setAudioSource(
+        AudioSource.uri(Uri.parse('asset:///$assetPath')),
+        preload: false,
+      );
+      
+      // 3. Explicitly load and wait for the 'ready' state.
+      await _player.load();
+
+      // Apply current playback speed
+      await _player.setSpeed(_speed);
+      
+      // 4. Reset position and a small final delay to ensure sync.
+      await _player.seek(Duration.zero);
+      await Future.delayed(const Duration(milliseconds: 50));
+      
+      // 5. Play only if we are still the active request.
+      _player.play();
     } catch (e) {
-      final errorStr = e.toString();
-      // Rapid taps can race; ignore those benign errors.
-      if (errorStr.contains('interrupted') || errorStr.contains('aborted')) {
-        return;
-      }
-      debugPrint("AudioService Error playing $cleanPath: $e");
+      debugPrint("AudioService Error playing $assetPath: $e");
+    } finally {
+      _isProcessing = false;
     }
   }
 
@@ -63,17 +99,6 @@ class AudioService {
       await _player.pause();
     } catch (e) {
       debugPrint("AudioService pause Error: $e");
-    }
-  }
-
-  double get playbackSpeed => _speed;
-
-  Future<void> setSpeed(double speed) async {
-    _speed = speed;
-    try {
-      await _player.setPlaybackRate(speed);
-    } catch (e) {
-      debugPrint("AudioService setSpeed Error: $e");
     }
   }
 

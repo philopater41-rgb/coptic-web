@@ -4,8 +4,9 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:google_fonts/google_fonts.dart';
 import '../services/stage_service.dart';
-import '../services/language_service.dart';
 import '../services/audio_service.dart';
+import '../utils/donation_utils.dart';
+import '../widgets/settings_bottom_sheet.dart';
 
 Map<String, dynamic> _parseWordsJson(String jsonString) {
   return jsonDecode(jsonString) as Map<String, dynamic>;
@@ -44,17 +45,30 @@ class WordsPage extends StatefulWidget {
 
 class _WordsPageState extends State<WordsPage> {
   final StageService _stageService = StageService();
-  final LanguageService _langService = LanguageService();
   final AudioService _audioService = AudioService();
   Map<String, dynamic> _allWordsJson = {};
   List<WordData> _words = [];
   bool _isLoading = true;
-  String _selectedLetter = "all";
+  String _selectedLetter = "الكل";
   final String _searchQuery = "";
   bool _showCoptic = true;
   bool _showArabic = true;
   bool _showPronunciation = true;
   final ValueNotifier<String?> _currentlyPlayingNotifier = ValueNotifier<String?>(null);
+
+  void _showLimitSnackbar() {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          'مينفعش تخفي الـ 3 مع بعض',
+          textAlign: TextAlign.right,
+          style: GoogleFonts.cairo(fontWeight: FontWeight.bold),
+        ),
+        duration: const Duration(seconds: 2),
+        backgroundColor: const Color(0xFFDC2626),
+      ),
+    );
+  }
 
   String _getCopticFontFamily(String text) {
     for (int i = 0; i < text.length; i++) {
@@ -70,7 +84,6 @@ class _WordsPageState extends State<WordsPage> {
   void initState() {
     super.initState();
     _stageService.addListener(_onStageChanged);
-    _langService.addListener(_onLanguageChanged);
     _loadData();
     _audioService.setOnComplete(() {
       if (mounted) _currentlyPlayingNotifier.value = null;
@@ -81,13 +94,8 @@ class _WordsPageState extends State<WordsPage> {
   void dispose() {
     _audioService.stop();
     _stageService.removeListener(_onStageChanged);
-    _langService.removeListener(_onLanguageChanged);
     _currentlyPlayingNotifier.dispose();
     super.dispose();
-  }
-
-  void _onLanguageChanged() {
-    _loadData();
   }
 
   void _onStageChanged() {
@@ -110,8 +118,7 @@ class _WordsPageState extends State<WordsPage> {
     }
 
     try {
-      final String jsonPath = _langService.getDataPath('words');
-      final String jsonString = await tryLoad(jsonPath);
+      final String jsonString = await tryLoad('assets/data/words.json');
       _allWordsJson = await compute(_parseWordsJson, jsonString);
       _filterForStage();
     } catch (e) {
@@ -170,15 +177,15 @@ class _WordsPageState extends State<WordsPage> {
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
-      return Center(child: CircularProgressIndicator(color: Theme.of(context).colorScheme.primary));
+      return const Center(child: CircularProgressIndicator(color: Color(0xFFB45309)));
     }
 
-    // Horizontal category list (alphabet unique letters for current stage + all)
-    final List<String> alphabet = ["all", ..._words.map((w) => w.letter).toSet().toList()];
+    // Horizontal category list (alphabet unique letters for current stage + الكل)
+    final List<String> alphabet = ["الكل", ..._words.map((w) => w.letter).toSet().toList()];
 
     // Filtered words
     final filteredWords = _words.where((word) {
-      final matchesLetter = _selectedLetter == "all" || word.letter == _selectedLetter;
+      final matchesLetter = _selectedLetter == "الكل" || word.letter == _selectedLetter;
       final query = _searchQuery.trim().toLowerCase();
       final matchesSearch = query.isEmpty ||
           word.coptic.toLowerCase().contains(query) ||
@@ -207,24 +214,15 @@ class _WordsPageState extends State<WordsPage> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.08),
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.2)),
-                  ),
-                  child: Icon(
-                    Icons.menu_book_rounded,
-                    color: Theme.of(context).colorScheme.primary,
-                    size: 22,
-                  ),
+                IconButton(
+                  onPressed: () => showSettingsBottomSheet(context),
+                  icon: const Icon(Icons.settings_rounded, color: Color(0xFFB45309)),
                 ),
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
                     Text(
-                      _langService.translate('coptic_words'),
+                      'الكلمات القبطية',
                       style: GoogleFonts.cairo(
                         fontSize: 24,
                         fontWeight: FontWeight.w900,
@@ -233,7 +231,7 @@ class _WordsPageState extends State<WordsPage> {
                       ),
                     ),
                     Text(
-                      '${_langService.translate('year_2026')} • ${_langService.translate(_stageService.selectedStage.id)}',
+                      'سنة ٢٠٢٦ • ${_stageService.selectedStage.name}',
                       style: GoogleFonts.cairo(
                         fontSize: 11,
                         fontWeight: FontWeight.w800,
@@ -246,15 +244,67 @@ class _WordsPageState extends State<WordsPage> {
             ),
           ),
 
+          // Toggles for visibility (similar to hymns_page)
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 8.0),
+            child: Container(
+              padding: const EdgeInsets.all(6),
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.85),
+                borderRadius: BorderRadius.circular(28),
+                border: Border.all(color: Colors.white.withValues(alpha: 0.6)),
+              ),
+              child: Row(
+                children: [
+                  _buildToggleItem(
+                    title: 'القبطي',
+                    active: _showCoptic,
+                    icon: _showCoptic ? Icons.visibility : Icons.visibility_off,
+                    onTap: () {
+                      if (_showCoptic && !_showArabic && !_showPronunciation) {
+                        _showLimitSnackbar();
+                      } else {
+                        setState(() => _showCoptic = !_showCoptic);
+                      }
+                    },
+                  ),
+                  _buildToggleItem(
+                    title: 'النطق',
+                    active: _showPronunciation,
+                    icon: _showPronunciation ? Icons.visibility : Icons.visibility_off,
+                    onTap: () {
+                      if (_showPronunciation && !_showCoptic && !_showArabic) {
+                        _showLimitSnackbar();
+                      } else {
+                        setState(() => _showPronunciation = !_showPronunciation);
+                      }
+                    },
+                  ),
+                  _buildToggleItem(
+                    title: 'العربي',
+                    active: _showArabic,
+                    icon: _showArabic ? Icons.visibility : Icons.visibility_off,
+                    onTap: () {
+                      if (_showArabic && !_showCoptic && !_showPronunciation) {
+                        _showLimitSnackbar();
+                      } else {
+                        setState(() => _showArabic = !_showArabic);
+                      }
+                    },
+                  ),
+                ],
+              ),
+            ),
+          ),
+
           // Alphabet Horizontal Selector Scrollable List
           Padding(
-            padding: const EdgeInsets.symmetric(vertical: 12),
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
             child: SizedBox(
               height: 52,
               child: ListView.builder(
                 scrollDirection: Axis.horizontal,
-                reverse: _langService.isArabic, // RTL feel when Arabic
-                padding: const EdgeInsets.symmetric(horizontal: 20),
+                reverse: true, // RTL feel
                 itemCount: alphabet.length,
                 itemBuilder: (context, idx) {
                   final letter = alphabet[idx];
@@ -267,28 +317,35 @@ class _WordsPageState extends State<WordsPage> {
                       margin: const EdgeInsets.only(left: 10),
                       padding: const EdgeInsets.symmetric(horizontal: 18),
                       decoration: BoxDecoration(
-                        color: isSelected ? Theme.of(context).colorScheme.primary : Colors.white.withValues(alpha: 0.8),
+                        color: isSelected ? const Color(0xFFB45309) : Colors.white.withValues(alpha: 0.8),
                         borderRadius: BorderRadius.circular(24),
                         border: Border.all(
-                          color: isSelected ? Theme.of(context).colorScheme.primary : Colors.white.withValues(alpha: 0.55),
+                          color: isSelected ? const Color(0xFFB45309) : Colors.white.withValues(alpha: 0.55),
                         ),
                         boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.04),
-                            blurRadius: 8,
-                          )
+                          if (isSelected)
+                            BoxShadow(
+                              color: const Color(0xFFB45309).withValues(alpha: 0.24),
+                              blurRadius: 14,
+                              offset: const Offset(0, 4),
+                            )
+                          else
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.04),
+                              blurRadius: 8,
+                            )
                         ],
                       ),
                       child: Center(
                         child: Text(
-                          letter == "all" ? _langService.translate('all_filter') : letter,
+                          letter,
                           style: isSelected
                               ? GoogleFonts.cairo(
                                   color: Colors.white,
                                   fontWeight: FontWeight.w900,
                                   fontSize: 14,
                                 )
-                              : (letter == "all"
+                              : (letter == "الكل"
                                   ? GoogleFonts.cairo(
                                       color: const Color(0xFF475569),
                                       fontWeight: FontWeight.w800,
@@ -315,8 +372,11 @@ class _WordsPageState extends State<WordsPage> {
                 ? ListView.builder(
                     padding: const EdgeInsets.only(left: 20, right: 20, top: 12, bottom: 120),
                     cacheExtent: 500, // Increased cache extent for smoother scrolling
-                    itemCount: filteredWords.length,
+                    itemCount: filteredWords.length + 1,
                     itemBuilder: (context, index) {
+                      if (index == filteredWords.length) {
+                        return DonationUtils.buildDonationBanner(context);
+                      }
                       final word = filteredWords[index];
 
                       return ValueListenableBuilder<String?>(
@@ -326,18 +386,18 @@ class _WordsPageState extends State<WordsPage> {
 
                             return AnimatedContainer(
                             duration: const Duration(milliseconds: 300),
-                            margin: const EdgeInsets.only(bottom: 12),
+                            margin: const EdgeInsets.only(bottom: 16),
                             decoration: BoxDecoration(
                               color: isPlaying ? Colors.white : const Color(0xFFFDFBF7),
                               borderRadius: BorderRadius.circular(32),
                               border: Border.all(
-                                color: isPlaying ? Theme.of(context).colorScheme.primary : const Color(0xFFE2E8F0),
+                                color: isPlaying ? const Color(0xFFB45309) : const Color(0xFFE2E8F0),
                                 width: isPlaying ? 1.5 : 1.0,
                               ),
                               boxShadow: [
                                 BoxShadow(
                                   color: isPlaying 
-                                      ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.12)
+                                      ? const Color(0xFFB45309).withValues(alpha: 0.12)
                                       : Colors.black.withValues(alpha: 0.03),
                                   blurRadius: 8,
                                   offset: const Offset(0, 4),
@@ -359,15 +419,15 @@ class _WordsPageState extends State<WordsPage> {
                                       width: 48,
                                       height: 48,
                                       decoration: BoxDecoration(
-                                        color: isPlaying ? Theme.of(context).colorScheme.primary : const Color(0xFFF1F5F9),
+                                        color: isPlaying ? const Color(0xFFB45309) : const Color(0xFFF1F5F9),
                                         borderRadius: BorderRadius.circular(18),
                                         border: Border.all(
-                                          color: isPlaying ? Theme.of(context).colorScheme.primary : const Color(0xFFE2E8F0),
+                                          color: isPlaying ? const Color(0xFFB45309) : const Color(0xFFE2E8F0),
                                         ),
                                       ),
                                       child: Icon(
                                         isPlaying ? Icons.pause_rounded : Icons.volume_up_rounded,
-                                        color: isPlaying ? Colors.white : Theme.of(context).colorScheme.primary,
+                                        color: isPlaying ? Colors.white : const Color(0xFFB45309),
                                         size: 24,
                                       ),
                                     ),
@@ -400,7 +460,7 @@ class _WordsPageState extends State<WordsPage> {
                                                     fontFamily: _getCopticFontFamily(word.letter),
                                                     fontSize: 34,
                                                     fontWeight: FontWeight.w900,
-                                                    color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.3),
+                                                    color: const Color(0xFFB45309).withValues(alpha: 0.3),
                                                   ),
                                                 ),
                                               );
@@ -413,7 +473,7 @@ class _WordsPageState extends State<WordsPage> {
                                                 fontFamily: _getCopticFontFamily(word.letter),
                                                 fontSize: 34,
                                                 fontWeight: FontWeight.w900,
-                                                color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.3),
+                                                color: const Color(0xFFB45309).withValues(alpha: 0.3),
                                               ),
                                             ),
                                           ),
@@ -428,18 +488,13 @@ class _WordsPageState extends State<WordsPage> {
                                     crossAxisAlignment: CrossAxisAlignment.end,
                                     children: [
                                       if (_showCoptic)
-                                        FittedBox(
-                                          fit: BoxFit.scaleDown,
-                                          alignment: Alignment.centerRight,
-                                          child: Text(
-                                            word.coptic,
-                                            maxLines: 1,
-                                            style: TextStyle(
-                                              fontFamily: _getCopticFontFamily(word.coptic),
-                                              fontSize: 26,
-                                              fontWeight: FontWeight.w900,
-                                              color: const Color(0xFF1C1917),
-                                            ),
+                                        Text(
+                                          word.coptic,
+                                          style: TextStyle(
+                                            fontFamily: _getCopticFontFamily(word.coptic),
+                                            fontSize: 26,
+                                            fontWeight: FontWeight.w900,
+                                            color: const Color(0xFF1C1917),
                                           ),
                                         ),
                                       if (_showCoptic && (_showPronunciation || _showArabic))
@@ -448,15 +503,12 @@ class _WordsPageState extends State<WordsPage> {
                                         Row(
                                           mainAxisAlignment: MainAxisAlignment.end,
                                           children: [
-                                            Flexible(
-                                              child: Text(
-                                                '(${word.pronunciation})',
-                                                textAlign: TextAlign.end,
-                                                style: GoogleFonts.cairo(
-                                                  fontSize: 12,
-                                                  fontWeight: FontWeight.w800,
-                                                  color: const Color(0xFF64748B),
-                                                ),
+                                            Text(
+                                              '(${word.pronunciation})',
+                                              style: GoogleFonts.cairo(
+                                                fontSize: 12,
+                                                fontWeight: FontWeight.w800,
+                                                color: const Color(0xFF64748B),
                                               ),
                                             ),
                                             const SizedBox(width: 6),
@@ -496,15 +548,12 @@ class _WordsPageState extends State<WordsPage> {
                                                   ),
                                                 ),
                                               ),
-                                            Flexible(
-                                              child: Text(
-                                                word.meaning,
-                                                textAlign: TextAlign.end,
-                                                style: GoogleFonts.cairo(
-                                                  fontSize: 16,
-                                                  fontWeight: FontWeight.w900,
-                                                  color: const Color(0xFF334155),
-                                                ),
+                                            Text(
+                                              word.meaning,
+                                              style: GoogleFonts.cairo(
+                                                fontSize: 16,
+                                                fontWeight: FontWeight.w900,
+                                                color: const Color(0xFF334155),
                                               ),
                                             ),
                                           ],
@@ -528,7 +577,7 @@ class _WordsPageState extends State<WordsPage> {
                         const Icon(Icons.search_off_rounded, size: 64, color: Color(0xFFCBD5E1)),
                         const SizedBox(height: 12),
                         Text(
-                          _langService.translate('no_words_found'),
+                          'لا توجد كلمات مطابقة',
                           style: GoogleFonts.cairo(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
@@ -547,24 +596,58 @@ class _WordsPageState extends State<WordsPage> {
   Color _getGenderColor(String? gender) {
     switch (gender) {
       case 'مذكر':
-      case 'Masculine':
         return const Color(0xFF2563EB); // Blue
       case 'مؤنث':
-      case 'Feminine':
         return const Color(0xFFDB2777); // Pink
       case 'فعل':
-      case 'Verb':
         return const Color(0xFF059669); // Green
       case 'اسم علم':
-      case 'Proper Name':
-      case 'Name':
         return const Color(0xFF7C3AED); // Purple
       case 'عدد':
-      case 'Number':
         return const Color(0xFFD97706); // Amber
       default:
         return const Color(0xFF475569); // Slate
     }
   }
 
+  Widget _buildToggleItem({
+    required String title,
+    required bool active,
+    required IconData icon,
+    required VoidCallback onTap,
+  }) {
+    return Expanded(
+      child: GestureDetector(
+        onTap: onTap,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 250),
+          padding: const EdgeInsets.symmetric(vertical: 8),
+          decoration: BoxDecoration(
+            color: active ? const Color(0xFFFFEDD5) : Colors.transparent,
+            borderRadius: BorderRadius.circular(22),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                icon,
+                color: active ? const Color(0xFFB45309) : const Color(0xFF64748B),
+                size: 16,
+              ),
+              const SizedBox(height: 3),
+              Text(
+                title,
+                textAlign: TextAlign.center,
+                style: GoogleFonts.cairo(
+                  fontSize: 10,
+                  fontWeight: FontWeight.w900,
+                  color: active ? const Color(0xFFB45309) : const Color(0xFF64748B),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 }

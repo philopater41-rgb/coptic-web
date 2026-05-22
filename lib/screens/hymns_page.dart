@@ -5,9 +5,10 @@ import 'package:flutter/services.dart' show rootBundle;
 import 'package:google_fonts/google_fonts.dart';
 import '../models/hymn_models.dart';
 import '../services/stage_service.dart';
-import '../services/language_service.dart';
 import '../services/bookmark_service.dart';
 import '../services/audio_service.dart';
+import '../utils/donation_utils.dart';
+import '../widgets/settings_bottom_sheet.dart';
 
 Map<String, dynamic> _parseHymnsJson(String jsonString) {
   return jsonDecode(jsonString) as Map<String, dynamic>;
@@ -22,7 +23,6 @@ class HymnsPage extends StatefulWidget {
 
 class _HymnsPageState extends State<HymnsPage> {
   final StageService _stageService = StageService();
-  final LanguageService _langService = LanguageService();
   final BookmarkService _bookmarkService = BookmarkService();
   final AudioService _audioService = AudioService();
 
@@ -51,7 +51,6 @@ class _HymnsPageState extends State<HymnsPage> {
     super.initState();
     _stageService.addListener(_onStageChanged);
     _bookmarkService.addListener(_update);
-    _langService.addListener(_onLanguageChanged);
     _loadData();
     _audioService.setOnComplete(() {
       if (mounted) _currentlyPlayingNotifier.value = null;
@@ -63,17 +62,12 @@ class _HymnsPageState extends State<HymnsPage> {
     _audioService.stop();
     _stageService.removeListener(_onStageChanged);
     _bookmarkService.removeListener(_update);
-    _langService.removeListener(_onLanguageChanged);
     _currentlyPlayingNotifier.dispose();
     super.dispose();
   }
 
   void _update() {
     if (mounted) setState(() {});
-  }
-
-  void _onLanguageChanged() {
-    _loadData();
   }
 
   void _onStageChanged() {
@@ -99,8 +93,7 @@ class _HymnsPageState extends State<HymnsPage> {
     }
 
     try {
-      final String jsonPath = _langService.getDataPath('hymns');
-      final String jsonString = await tryLoad(jsonPath);
+      final String jsonString = await tryLoad('assets/data/hymns.json');
       _allHymnsJson = await compute(_parseHymnsJson, jsonString);
       _filterForStage();
     } catch (e) {
@@ -156,10 +149,24 @@ class _HymnsPageState extends State<HymnsPage> {
     }
   }
 
+  void _showLimitSnackbar() {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          'مينفعش تخفي الـ 3 مع بعض',
+          textAlign: TextAlign.right,
+          style: GoogleFonts.cairo(fontWeight: FontWeight.bold),
+        ),
+        duration: const Duration(seconds: 2),
+        backgroundColor: const Color(0xFFDC2626),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
-      return Center(child: CircularProgressIndicator(color: Theme.of(context).colorScheme.primary));
+      return const Center(child: CircularProgressIndicator(color: Color(0xFFB45309)));
     }
 
     if (_hymns.isEmpty) {
@@ -170,7 +177,7 @@ class _HymnsPageState extends State<HymnsPage> {
             const Icon(Icons.music_off_rounded, size: 64, color: Color(0xFFCBD5E1)),
             const SizedBox(height: 12),
             Text(
-              _langService.translate('no_hymns_found'),
+              'لا توجد محفوظات حالياً',
               style: GoogleFonts.cairo(
                 fontSize: 18,
                 fontWeight: FontWeight.w900,
@@ -204,24 +211,15 @@ class _HymnsPageState extends State<HymnsPage> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.08),
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.2)),
-                  ),
-                  child: Icon(
-                    Icons.headphones_rounded,
-                    color: Theme.of(context).colorScheme.primary,
-                    size: 22,
-                  ),
+                IconButton(
+                  onPressed: () => showSettingsBottomSheet(context),
+                  icon: const Icon(Icons.settings_rounded, color: Color(0xFFB45309)),
                 ),
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
                     Text(
-                      _langService.translate('coptic_hymns'),
+                      'المحفوظات القبطية',
                       style: GoogleFonts.cairo(
                         fontSize: 24,
                         fontWeight: FontWeight.w900,
@@ -230,7 +228,7 @@ class _HymnsPageState extends State<HymnsPage> {
                       ),
                     ),
                     Text(
-                      '${_langService.translate('year_2026')} • ${_langService.translate(_stageService.selectedStage.id)}',
+                      'سنة ٢٠٢٦ • ${_stageService.selectedStage.name}',
                       style: GoogleFonts.cairo(
                         fontSize: 11,
                         fontWeight: FontWeight.w800,
@@ -243,16 +241,68 @@ class _HymnsPageState extends State<HymnsPage> {
             ),
           ),
 
+          // Controls Area (View Toggles)
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 8.0),
+            child: Container(
+              padding: const EdgeInsets.all(6),
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.85),
+                borderRadius: BorderRadius.circular(28),
+                border: Border.all(color: Colors.white.withValues(alpha: 0.6)),
+              ),
+              child: Row(
+                children: [
+                  _buildToggleItem(
+                    title: 'القبطي',
+                    active: _showCoptic,
+                    icon: _showCoptic ? Icons.visibility : Icons.visibility_off,
+                    onTap: () {
+                      if (_showCoptic && !_showArabic && !_showPhonetic) {
+                        _showLimitSnackbar();
+                        return;
+                      }
+                      setState(() => _showCoptic = !_showCoptic);
+                    },
+                  ),
+                  _buildToggleItem(
+                    title: 'النطق',
+                    active: _showPhonetic,
+                    icon: _showPhonetic ? Icons.visibility : Icons.visibility_off,
+                    onTap: () {
+                      if (_showPhonetic && !_showCoptic && !_showArabic) {
+                        _showLimitSnackbar();
+                        return;
+                      }
+                      setState(() => _showPhonetic = !_showPhonetic);
+                    },
+                  ),
+                  _buildToggleItem(
+                    title: 'العربي',
+                    active: _showArabic,
+                    icon: _showArabic ? Icons.visibility : Icons.visibility_off,
+                    onTap: () {
+                      if (_showArabic && !_showCoptic && !_showPhonetic) {
+                        _showLimitSnackbar();
+                        return;
+                      }
+                      setState(() => _showArabic = !_showArabic);
+                    },
+                  ),
+                ],
+              ),
+            ),
+          ),
+
           // Level / Hymn Tabs Selector (If there is more than 1 hymn)
           if (_hymns.length > 1)
             Padding(
-              padding: const EdgeInsets.symmetric(vertical: 8),
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
               child: SizedBox(
                 height: 48,
                 child: ListView.builder(
                   scrollDirection: Axis.horizontal,
-                  reverse: _langService.isArabic, // RTL feel when Arabic
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  reverse: true, // RTL feel
                   itemCount: _hymns.length,
                   itemBuilder: (context, index) {
                     final isSelected = _activeHymnIndex == index;
@@ -263,16 +313,23 @@ class _HymnsPageState extends State<HymnsPage> {
                         margin: const EdgeInsets.only(left: 10),
                         padding: const EdgeInsets.symmetric(horizontal: 18),
                         decoration: BoxDecoration(
-                          color: isSelected ? Theme.of(context).colorScheme.primary : Colors.white.withValues(alpha: 0.8),
+                          color: isSelected ? const Color(0xFFB45309) : Colors.white.withValues(alpha: 0.8),
                           borderRadius: BorderRadius.circular(24),
                           border: Border.all(
-                            color: isSelected ? Theme.of(context).colorScheme.primary : Colors.white.withValues(alpha: 0.55),
+                            color: isSelected ? const Color(0xFFB45309) : Colors.white.withValues(alpha: 0.55),
                           ),
                           boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.04),
-                              blurRadius: 8,
-                            )
+                            if (isSelected)
+                              BoxShadow(
+                                color: const Color(0xFFB45309).withValues(alpha: 0.24),
+                                blurRadius: 14,
+                                offset: const Offset(0, 4),
+                              )
+                            else
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.04),
+                                blurRadius: 8,
+                              )
                           ],
                         ),
                         child: Center(
@@ -297,8 +354,11 @@ class _HymnsPageState extends State<HymnsPage> {
             child: ListView.builder(
               padding: const EdgeInsets.only(left: 20, right: 20, top: 12, bottom: 120),
               cacheExtent: 500, // Pre-loads items to eliminate scroll stutter
-              itemCount: currentHymn.verses.length,
+              itemCount: currentHymn.verses.length + 1,
               itemBuilder: (context, index) {
+                if (index == currentHymn.verses.length) {
+                  return DonationUtils.buildDonationBanner(context);
+                }
                 final verse = currentHymn.verses[index];
                 final isFav = _bookmarkService.isBookmarked(verse);
 
@@ -309,18 +369,18 @@ class _HymnsPageState extends State<HymnsPage> {
 
                       return AnimatedContainer(
                       duration: const Duration(milliseconds: 300),
-                      margin: const EdgeInsets.only(bottom: 12),
+                      margin: const EdgeInsets.only(bottom: 20),
                       decoration: BoxDecoration(
                         color: isPlaying ? Colors.white : const Color(0xFFFDFBF7),
                         borderRadius: BorderRadius.circular(32),
                         border: Border.all(
-                          color: isPlaying ? Theme.of(context).colorScheme.primary : const Color(0xFFE2E8F0),
+                          color: isPlaying ? const Color(0xFFB45309) : const Color(0xFFE2E8F0),
                           width: isPlaying ? 1.5 : 1.0,
                         ),
                         boxShadow: [
                           BoxShadow(
                             color: isPlaying 
-                                ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.12)
+                                ? const Color(0xFFB45309).withValues(alpha: 0.12)
                                 : Colors.black.withValues(alpha: 0.03),
                             blurRadius: 8,
                             offset: const Offset(0, 4),
@@ -346,15 +406,15 @@ class _HymnsPageState extends State<HymnsPage> {
                                     width: 44,
                                     height: 44,
                                     decoration: BoxDecoration(
-                                      color: isPlaying ? Theme.of(context).colorScheme.primary : const Color(0xFFF1F5F9),
+                                      color: isPlaying ? const Color(0xFFB45309) : const Color(0xFFF1F5F9),
                                       borderRadius: BorderRadius.circular(16),
                                       border: Border.all(
-                                        color: isPlaying ? Theme.of(context).colorScheme.primary : const Color(0xFFE2E8F0),
+                                        color: isPlaying ? const Color(0xFFB45309) : const Color(0xFFE2E8F0),
                                       ),
                                     ),
                                     child: Icon(
                                       isPlaying ? Icons.pause_rounded : Icons.volume_up_rounded,
-                                      color: isPlaying ? Colors.white : Theme.of(context).colorScheme.primary,
+                                      color: isPlaying ? Colors.white : const Color(0xFFB45309),
                                       size: 22,
                                     ),
                                   ),
@@ -411,7 +471,7 @@ class _HymnsPageState extends State<HymnsPage> {
                                 fontSize: 13,
                                 fontWeight: FontWeight.bold,
                                 fontStyle: FontStyle.italic,
-                                color: Theme.of(context).colorScheme.primary,
+                                color: const Color(0xFFB45309),
                               ),
                             ),
                           ],
@@ -454,4 +514,43 @@ class _HymnsPageState extends State<HymnsPage> {
     );
   }
 
+  Widget _buildToggleItem({
+    required String title,
+    required bool active,
+    required IconData icon,
+    required VoidCallback onTap,
+  }) {
+    return Expanded(
+      child: GestureDetector(
+        onTap: onTap,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 250),
+          padding: const EdgeInsets.symmetric(vertical: 8),
+          decoration: BoxDecoration(
+            color: active ? const Color(0xFFFFEDD5) : Colors.transparent,
+            borderRadius: BorderRadius.circular(22),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                icon,
+                color: active ? const Color(0xFFB45309) : const Color(0xFF64748B),
+                size: 16,
+              ),
+              const SizedBox(height: 3),
+              Text(
+                title,
+                style: GoogleFonts.cairo(
+                  fontSize: 10,
+                  fontWeight: FontWeight.w900,
+                  color: active ? const Color(0xFFB45309) : const Color(0xFF64748B),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 }

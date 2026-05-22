@@ -4,8 +4,8 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:google_fonts/google_fonts.dart';
 import '../services/stage_service.dart';
-import '../services/language_service.dart';
 import '../services/audio_service.dart';
+import '../utils/donation_utils.dart';
 
 Map<String, dynamic> _parseLettersJson(String jsonString) {
   return jsonDecode(jsonString) as Map<String, dynamic>;
@@ -47,7 +47,6 @@ class LettersPage extends StatefulWidget {
 
 class _LettersPageState extends State<LettersPage> {
   final StageService _stageService = StageService();
-  final LanguageService _langService = LanguageService();
   final AudioService _audioService = AudioService();
   List<LetterData> _letters = [];
   bool _isLoading = true;
@@ -63,10 +62,9 @@ class _LettersPageState extends State<LettersPage> {
   void initState() {
     super.initState();
     _stageService.addListener(_onStageChanged);
-    _langService.addListener(_onLanguageChanged);
     _loadData();
-    _audioService.onPositionChanged.listen((p) async {
-      final d = await _audioService.getDuration();
+    _audioService.player.positionStream.listen((p) {
+      final d = _audioService.player.duration;
       if (d != null && d.inMilliseconds > 0 && mounted) {
         setState(() {
           _audioProgress = p.inMilliseconds / d.inMilliseconds;
@@ -87,12 +85,7 @@ class _LettersPageState extends State<LettersPage> {
   void dispose() {
     _audioService.stop();
     _stageService.removeListener(_onStageChanged);
-    _langService.removeListener(_onLanguageChanged);
     super.dispose();
-  }
-
-  void _onLanguageChanged() {
-    _loadData();
   }
 
   void _onStageChanged() {
@@ -125,8 +118,7 @@ class _LettersPageState extends State<LettersPage> {
 
     try {
       if (mounted) setState(() { _isLoading = true; });
-      final String jsonPath = _langService.getDataPath('letters');
-      final String jsonString = await tryLoad(jsonPath);
+      final String jsonString = await tryLoad('assets/data/letters.json');
       final Map<String, dynamic> jsonResponse = await compute(_parseLettersJson, jsonString);
 
       final stageId = _stageService.selectedStage.id;
@@ -192,7 +184,7 @@ class _LettersPageState extends State<LettersPage> {
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
-      return Center(child: CircularProgressIndicator(color: Theme.of(context).colorScheme.primary));
+      return const Center(child: CircularProgressIndicator(color: Color(0xFFB45309)));
     }
 
     final filteredLetters = _letters.where((letter) {
@@ -226,17 +218,17 @@ class _LettersPageState extends State<LettersPage> {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                   decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.08),
+                    color: const Color(0xFFB45309).withValues(alpha: 0.08),
                     borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.2)),
+                    border: Border.all(color: const Color(0xFFB45309).withValues(alpha: 0.2)),
                   ),
-                  child: Text(
+                  child: const Text(
                     'ⲀⲰ',
                     style: TextStyle(
                       fontFamily: 'CopticStandard',
                       fontSize: 22,
                       fontWeight: FontWeight.bold,
-                      color: Theme.of(context).colorScheme.primary,
+                      color: Color(0xFFB45309),
                     ),
                   ),
                 ),
@@ -244,7 +236,7 @@ class _LettersPageState extends State<LettersPage> {
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
                     Text(
-                      _langService.translate('coptic_letters'),
+                      'الحروف القبطية',
                       style: GoogleFonts.cairo(
                         fontSize: 24,
                         fontWeight: FontWeight.w900,
@@ -253,7 +245,7 @@ class _LettersPageState extends State<LettersPage> {
                       ),
                     ),
                     Text(
-                      '${_langService.translate('year_2026')} • ${_langService.translate(_stageService.selectedStage.id)}',
+                      'سنة ٢٠٢٦ • ${_stageService.selectedStage.name}',
                       style: GoogleFonts.cairo(
                         fontSize: 11,
                         fontWeight: FontWeight.w800,
@@ -271,15 +263,18 @@ class _LettersPageState extends State<LettersPage> {
             child: ListView.builder(
               padding: const EdgeInsets.only(left: 20, right: 20, top: 12, bottom: 120),
               cacheExtent: 500, // Increased for smoother scrolling
-              itemCount: filteredLetters.length,
+              itemCount: filteredLetters.length + 1,
               itemBuilder: (context, index) {
+                if (index == filteredLetters.length) {
+                  return DonationUtils.buildDonationBanner(context);
+                }
                 final letter = filteredLetters[index];
                 final letterIdx = _letters.indexOf(letter);
                 final isPlaying = _playingIndex == letterIdx;
 
                 return AnimatedContainer(
                   duration: const Duration(milliseconds: 300),
-                  margin: const EdgeInsets.only(bottom: 12),
+                  margin: const EdgeInsets.only(bottom: 24),
                   decoration: BoxDecoration(
                     color: isPlaying ? Colors.white : const Color(0xFFFDFBF7),
                     borderRadius: BorderRadius.circular(36),
@@ -351,9 +346,8 @@ class _LettersPageState extends State<LettersPage> {
                                       height: 1.2,
                                     ),
                                   ),
-                                  const SizedBox(height: 4),
                                   Text(
-                                    '${_langService.translate('pronunciation_label')}: ${letter.phonetic}',
+                                    'نطق الحرف: ${letter.phonetic}',
                                     style: GoogleFonts.cairo(
                                       fontSize: 12,
                                       fontWeight: FontWeight.w800,

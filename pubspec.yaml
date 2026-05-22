@@ -1,7 +1,7 @@
 name: coptic_app
 description: A new Flutter project for learning Coptic.
 publish_to: 'none'
-version: 4.0.0+3
+version: 1.0.0+1
 
 environment:
   sdk: '>=3.0.0 <4.0.0'
@@ -10,17 +10,16 @@ dependencies:
   flutter:
     sdk: flutter
   cupertino_icons: ^1.0.2
-  audioplayers: ^5.2.1
   google_fonts: ^6.1.0
   url_launcher: ^6.3.2
   font_awesome_flutter: ^11.0.0
+  just_audio: ^0.10.5
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^2.0.0
   flutter_launcher_icons: ^0.14.4
-  flutter_native_splash: ^2.4.4
 
 flutter:
   uses-material-design: true
@@ -28,6 +27,7 @@ flutter:
   assets:
     - assets/audio/
     - assets/images/
+    - assets/images/instapay_qr.jpeg
     - assets/data/
     - assets/images/words/
     - assets/images/words/p12/
@@ -35,17 +35,14 @@ flutter:
     - assets/images/words/p56/
     - assets/images/words/prep/
     - assets/images/words/uni/
+    - assets/images/words/sn/
     - assets/audio/letters/
     - assets/audio/words/
     - assets/audio/words/grad/
-    - assets/audio/words/kg/
     - assets/audio/words/p12/
     - assets/audio/words/p34/
     - assets/audio/words/p56/
     - assets/audio/words/prep/
-    - assets/audio/words/primary_1/
-    - assets/audio/words/primary_3/
-    - assets/audio/words/primary_5/
     - assets/audio/words/qana/
     - assets/audio/words/sec/
     - assets/audio/words/serv/
@@ -107,18 +104,6 @@ flutter:
 flutter_launcher_icons:
   android: "launcher_icon"
   ios: true
-  image_path: "assets/images/logo_sq.png"
-  # Adaptive icon — Android 8+ rounds the corners via the launcher's mask
-  # (rounded square, squircle, or circle depending on the device).
-  adaptive_icon_background: "#FAF7F0"
-  adaptive_icon_foreground: "assets/images/logo_fg.png"
+  image_path: "assets/images/app_icon.png"
   min_sdk_android: 21
-  remove_alpha_ios: true
-
-flutter_native_splash:
-  color: "#FAF7F0"
-  image: "assets/images/logo_fg.png"
-  android_12:
-    image: "assets/images/logo_fg.png"
-    color: "#FAF7F0"
 

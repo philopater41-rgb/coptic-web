@@ -3,7 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../models/hymn_models.dart';
 import '../services/bookmark_service.dart';
 import '../services/audio_service.dart';
-import '../services/language_service.dart';
+import '../widgets/settings_bottom_sheet.dart';
 
 class BookmarksPage extends StatefulWidget {
   const BookmarksPage({super.key});
@@ -15,14 +15,12 @@ class BookmarksPage extends StatefulWidget {
 class _BookmarksPageState extends State<BookmarksPage> {
   final BookmarkService _bookmarkService = BookmarkService();
   final AudioService _audioService = AudioService();
-  final LanguageService _langService = LanguageService();
   String? _currentlyPlayingId;
 
   @override
   void initState() {
     super.initState();
     _bookmarkService.addListener(_update);
-    _langService.addListener(_update);
     _audioService.setOnComplete(() {
       if (mounted) setState(() => _currentlyPlayingId = null);
     });
@@ -32,7 +30,6 @@ class _BookmarksPageState extends State<BookmarksPage> {
   void dispose() {
     _audioService.stop();
     _bookmarkService.removeListener(_update);
-    _langService.removeListener(_update);
     super.dispose();
   }
 
@@ -89,24 +86,15 @@ class _BookmarksPageState extends State<BookmarksPage> {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.08),
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.2)),
-                ),
-                child: Icon(
-                  Icons.star_rounded,
-                  color: Theme.of(context).colorScheme.primary,
-                  size: 22,
-                ),
+              IconButton(
+                onPressed: () => showSettingsBottomSheet(context),
+                icon: const Icon(Icons.settings_rounded, color: Color(0xFFB45309)),
               ),
               Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
                   Text(
-                    _langService.translate('bookmarks_title'),
+                    'الآيات والمحفوظات',
                     style: GoogleFonts.cairo(
                       fontSize: 22,
                       fontWeight: FontWeight.w900,
@@ -114,7 +102,7 @@ class _BookmarksPageState extends State<BookmarksPage> {
                     ),
                   ),
                   Text(
-                    '${_langService.translate('year_2026')} • ${_langService.translate('bookmarks_subtitle')}',
+                    'سنة ٢٠٢٦ • محفوظاتك الشخصية',
                     style: GoogleFonts.cairo(
                       fontSize: 10,
                       fontWeight: FontWeight.w900,
@@ -139,18 +127,18 @@ class _BookmarksPageState extends State<BookmarksPage> {
 
                     return AnimatedContainer(
                       duration: const Duration(milliseconds: 300),
-                      margin: const EdgeInsets.only(bottom: 12),
+                      margin: const EdgeInsets.only(bottom: 20),
                       decoration: BoxDecoration(
                         color: isPlaying ? Colors.white : Colors.white.withValues(alpha: 0.72),
                         borderRadius: BorderRadius.circular(36),
                         border: Border.all(
-                          color: isPlaying ? Theme.of(context).colorScheme.primary : Colors.white.withValues(alpha: 0.55),
+                          color: isPlaying ? const Color(0xFFB45309) : Colors.white.withValues(alpha: 0.55),
                           width: isPlaying ? 1.5 : 1.0,
                         ),
                         boxShadow: [
                           BoxShadow(
                             color: isPlaying 
-                                ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.12)
+                                ? const Color(0xFFB45309).withValues(alpha: 0.12)
                                 : Colors.black.withValues(alpha: 0.04),
                             blurRadius: 8,
                             offset: const Offset(0, 4),
@@ -176,15 +164,15 @@ class _BookmarksPageState extends State<BookmarksPage> {
                                       width: 44,
                                       height: 44,
                                       decoration: BoxDecoration(
-                                        color: isPlaying ? Theme.of(context).colorScheme.primary : const Color(0xFFF1F5F9),
+                                        color: isPlaying ? const Color(0xFFB45309) : const Color(0xFFF1F5F9),
                                         borderRadius: BorderRadius.circular(16),
                                         border: Border.all(
-                                          color: isPlaying ? Theme.of(context).colorScheme.primary : Colors.white.withValues(alpha: 0.55),
+                                          color: isPlaying ? const Color(0xFFB45309) : Colors.white.withValues(alpha: 0.55),
                                         ),
                                       ),
                                       child: Icon(
                                         isPlaying ? Icons.pause_rounded : Icons.volume_up_rounded,
-                                        color: isPlaying ? Colors.white : Theme.of(context).colorScheme.primary,
+                                        color: isPlaying ? Colors.white : const Color(0xFFB45309),
                                         size: 22,
                                       ),
                                     ),
@@ -239,7 +227,7 @@ class _BookmarksPageState extends State<BookmarksPage> {
                                   fontSize: 13,
                                   fontWeight: FontWeight.bold,
                                   fontStyle: FontStyle.italic,
-                                  color: Theme.of(context).colorScheme.primary,
+                                  color: const Color(0xFFB45309),
                                 ),
                               ),
                             ],
@@ -281,7 +269,7 @@ class _BookmarksPageState extends State<BookmarksPage> {
                       const Icon(Icons.star_border_rounded, size: 64, color: Color(0xFFCBD5E1)),
                       const SizedBox(height: 12),
                       Text(
-                        _langService.translate('bookmarks_empty'),
+                        'صفحة المحفوظات فاضية.\nاضغط على النجمة لحفظ أي جملة.',
                         textAlign: TextAlign.center,
                         style: GoogleFonts.cairo(
                           fontSize: 15,

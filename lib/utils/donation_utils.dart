@@ -2,11 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:url_launcher/url_launcher.dart';
-import '../services/language_service.dart';
 
 class DonationUtils {
-  static final LanguageService _langService = LanguageService();
-
   static void showDonationDialog(BuildContext context) {
     const String instapayUrl = 'https://ipn.eg/S/philopaterjoseph/instapay/08UtR6';
 
@@ -35,7 +32,7 @@ class DonationUtils {
               const SizedBox(height: 24),
               
               Text(
-                _langService.translate('donation_title'),
+                'دعم الخدمة',
                 style: GoogleFonts.cairo(
                   fontSize: 22,
                   fontWeight: FontWeight.w900,
@@ -44,7 +41,7 @@ class DonationUtils {
               ),
               const SizedBox(height: 8),
               Text(
-                _langService.translate('donation_desc'),
+                'للتبرع من اجل تطوير واستمرار الخدمة',
                 textAlign: TextAlign.center,
                 style: GoogleFonts.cairo(
                   fontWeight: FontWeight.bold,
@@ -84,7 +81,7 @@ class DonationUtils {
                 },
                 icon: const Icon(Icons.open_in_new_rounded),
                 label: Text(
-                  _langService.translate('open_instapay'),
+                  'فتح رابط انستاباي المباشر',
                   style: GoogleFonts.cairo(fontWeight: FontWeight.w900, fontSize: 16),
                 ),
                 style: ElevatedButton.styleFrom(
@@ -105,7 +102,7 @@ class DonationUtils {
                   Navigator.pop(context);
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                      content: Text(_langService.translate('link_copied'), textAlign: TextAlign.center, style: GoogleFonts.cairo()),
+                      content: Text('تم نسخ الرابط بنجاح!', textAlign: TextAlign.center, style: GoogleFonts.cairo()),
                       backgroundColor: const Color(0xFF059669),
                       behavior: SnackBarBehavior.floating,
                       margin: const EdgeInsets.all(20),
@@ -115,7 +112,7 @@ class DonationUtils {
                 },
                 icon: const Icon(Icons.copy_rounded, size: 18),
                 label: Text(
-                  _langService.translate('copy_link'),
+                  'نسخ رابط التبرع',
                   style: GoogleFonts.cairo(fontWeight: FontWeight.bold),
                 ),
                 style: OutlinedButton.styleFrom(
@@ -169,7 +166,7 @@ class DonationUtils {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    _langService.translate('banner_title'),
+                    'دعم استمرار التطبيق',
                     style: GoogleFonts.cairo(
                       color: Colors.white,
                       fontSize: 17,
@@ -177,7 +174,7 @@ class DonationUtils {
                     ),
                   ),
                   Text(
-                    _langService.translate('banner_desc'),
+                    'ساعدنا في تطوير الخدمة وتحديثها',
                     style: GoogleFonts.cairo(
                       color: Colors.white.withValues(alpha: 0.9),
                       fontSize: 12,
