@@ -6,19 +6,28 @@ import '../services/language_service.dart';
 
 class SettingsBottomSheet extends StatefulWidget {
   final bool showImageOption;
+  final bool showVisibilityOptions;
 
   const SettingsBottomSheet({
     super.key,
     this.showImageOption = true,
+    this.showVisibilityOptions = true,
   });
 
-  static Future<void> show(BuildContext context, {bool showImageOption = true}) {
+  static Future<void> show(
+    BuildContext context, {
+    bool showImageOption = true,
+    bool showVisibilityOptions = true,
+  }) {
     return showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       barrierColor: Colors.black.withValues(alpha: 0.3),
-      builder: (context) => SettingsBottomSheet(showImageOption: showImageOption),
+      builder: (context) => SettingsBottomSheet(
+        showImageOption: showImageOption,
+        showVisibilityOptions: showVisibilityOptions,
+      ),
     );
   }
 
@@ -336,39 +345,42 @@ class _SettingsBottomSheetState extends State<SettingsBottomSheet> {
             ),
             const SizedBox(height: 32),
 
-            // Separator line
-            Container(
-              height: 1.5,
-              color: const Color(0xFFF1F5F9),
-            ),
-            const SizedBox(height: 24),
+            if (widget.showVisibilityOptions || widget.showImageOption) ...[
+              Container(
+                height: 1.5,
+                color: const Color(0xFFF1F5F9),
+              ),
+              const SizedBox(height: 24),
+            ],
 
-            // Visibility Control Rows
-            _buildToggleRow(
-              icon: Icons.sort_by_alpha_rounded,
-              title: _langService.translate('show_coptic'),
-              value: _settingsService.showCoptic,
-              onChanged: _toggleCoptic,
-            ),
-            const SizedBox(height: 16),
+            if (widget.showVisibilityOptions) ...[
+              // Visibility Control Rows
+              _buildToggleRow(
+                icon: Icons.sort_by_alpha_rounded,
+                title: _langService.translate('show_coptic'),
+                value: _settingsService.showCoptic,
+                onChanged: _toggleCoptic,
+              ),
+              const SizedBox(height: 16),
 
-            _buildToggleRow(
-              icon: Icons.translate_rounded,
-              title: _langService.translate('show_meaning'),
-              value: _settingsService.showArabic,
-              onChanged: _toggleArabic,
-            ),
-            const SizedBox(height: 16),
+              _buildToggleRow(
+                icon: Icons.translate_rounded,
+                title: _langService.translate('show_meaning'),
+                value: _settingsService.showArabic,
+                onChanged: _toggleArabic,
+              ),
+              const SizedBox(height: 16),
 
-            _buildToggleRow(
-              icon: Icons.phonelink_ring_rounded,
-              title: _langService.translate('show_pronunciation'),
-              value: _settingsService.showPronunciation,
-              onChanged: _togglePronunciation,
-            ),
+              _buildToggleRow(
+                icon: Icons.phonelink_ring_rounded,
+                title: _langService.translate('show_pronunciation'),
+                value: _settingsService.showPronunciation,
+                onChanged: _togglePronunciation,
+              ),
+            ],
 
             if (widget.showImageOption) ...[
-              const SizedBox(height: 16),
+              if (widget.showVisibilityOptions) const SizedBox(height: 16),
               _buildToggleRow(
                 icon: Icons.image_outlined,
                 title: _langService.translate('show_image'),

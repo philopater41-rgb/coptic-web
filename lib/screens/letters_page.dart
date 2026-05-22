@@ -256,7 +256,7 @@ class _LettersPageState extends State<LettersPage> {
                     ),
                     const SizedBox(width: 8),
                     GestureDetector(
-                      onTap: () => SettingsBottomSheet.show(context, showImageOption: false),
+                      onTap: () => SettingsBottomSheet.show(context, showImageOption: false, showVisibilityOptions: false),
                       child: Container(
                         padding: const EdgeInsets.all(8),
                         decoration: BoxDecoration(

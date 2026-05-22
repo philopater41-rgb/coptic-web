@@ -339,39 +339,6 @@ class _HomePageState extends State<HomePage> {
                   const SizedBox(height: 20),
                   InkWell(
                     onTap: () async {
-                      final url = Uri.parse('https://coptic-web.philopater41.workers.dev/');
-                      try {
-                        await launchUrl(url, mode: LaunchMode.externalApplication);
-                      } catch (_) {}
-                    },
-                    borderRadius: BorderRadius.circular(16),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFB45309).withValues(alpha: 0.08),
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: const Color(0xFFB45309).withValues(alpha: 0.2)),
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          const Icon(Icons.language_rounded, color: Color(0xFFB45309), size: 20),
-                          const SizedBox(width: 8),
-                          Text(
-                            _langService.translate('web_version'),
-                            style: GoogleFonts.cairo(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 13,
-                              color: const Color(0xFFB45309),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  InkWell(
-                    onTap: () async {
                       final url = Uri.parse('https://play.google.com/store/apps/details?id=com.atger.ebty&pcampaignid=web_share');
                       try {
                         await launchUrl(url, mode: LaunchMode.externalApplication);
@@ -381,21 +348,21 @@ class _HomePageState extends State<HomePage> {
                     child: Container(
                       padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
                       decoration: BoxDecoration(
-                        color: const Color(0xFF10B981).withValues(alpha: 0.08),
+                        color: _stageService.selectedStage.accent.withValues(alpha: 0.08),
                         borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: const Color(0xFF10B981).withValues(alpha: 0.2)),
+                        border: Border.all(color: _stageService.selectedStage.accent.withValues(alpha: 0.2)),
                       ),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          const FaIcon(FontAwesomeIcons.googlePlay, color: Color(0xFF10B981), size: 16),
+                          FaIcon(FontAwesomeIcons.googlePlay, color: _stageService.selectedStage.accent, size: 16),
                           const SizedBox(width: 8),
                           Text(
                             _langService.translate('android_app'),
                             style: GoogleFonts.cairo(
                               fontWeight: FontWeight.bold,
                               fontSize: 13,
-                              color: const Color(0xFF10B981),
+                              color: _stageService.selectedStage.accent,
                             ),
                           ),
                         ],
