@@ -1,6 +1,6 @@
 {
-    "name": "coptic_app",
-    "short_name": "coptic_app",
+    "name": "coptic app",
+    "short_name": "coptic app",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",
