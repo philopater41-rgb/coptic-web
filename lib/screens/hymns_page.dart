@@ -229,7 +229,7 @@ class _HymnsPageState extends State<HymnsPage> {
                     ),
                     const SizedBox(width: 8),
                     GestureDetector(
-                      onTap: () => SettingsBottomSheet.show(context, showImageOption: false, showVisibilityOptions: false),
+                      onTap: () => SettingsBottomSheet.show(context, showImageOption: false),
                       child: Container(
                         padding: const EdgeInsets.all(8),
                         decoration: BoxDecoration(
