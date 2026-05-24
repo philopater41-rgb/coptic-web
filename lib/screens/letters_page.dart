@@ -403,13 +403,13 @@ class _LettersPageState extends State<LettersPage> {
                               )
                             ],
                           ),
-                          if (_settingsService.showArabic || _settingsService.showCoptic) ...[
+                          if (true) ...[
                             const SizedBox(height: 20),
                             // Bottom Section: Glyph & Rules
                             Row(
                               crossAxisAlignment: CrossAxisAlignment.end,
                               children: [
-                                if (_settingsService.showArabic) ...[
+                                if (true) ...[
                                   Expanded(
                                     child: Column(
                                       crossAxisAlignment: CrossAxisAlignment.end,
@@ -461,9 +461,9 @@ class _LettersPageState extends State<LettersPage> {
                                       }).toList(),
                                     ),
                                   ),
-                                  if (_settingsService.showCoptic) const SizedBox(width: 14),
+                                  if (true) const SizedBox(width: 14),
                                 ],
-                                if (_settingsService.showCoptic)
+                                if (true)
                                   Row(
                                     crossAxisAlignment: CrossAxisAlignment.baseline,
                                     textBaseline: TextBaseline.alphabetic,

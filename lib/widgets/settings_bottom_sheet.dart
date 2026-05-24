@@ -7,17 +7,20 @@ import '../services/language_service.dart';
 class SettingsBottomSheet extends StatefulWidget {
   final bool showImageOption;
   final bool showVisibilityOptions;
+  final String scope;
 
   const SettingsBottomSheet({
     super.key,
     this.showImageOption = true,
     this.showVisibilityOptions = true,
+    this.scope = 'words',
   });
 
   static Future<void> show(
     BuildContext context, {
     bool showImageOption = true,
     bool showVisibilityOptions = true,
+    String scope = 'words',
   }) {
     return showModalBottomSheet(
       context: context,
@@ -27,6 +30,7 @@ class SettingsBottomSheet extends StatefulWidget {
       builder: (context) => SettingsBottomSheet(
         showImageOption: showImageOption,
         showVisibilityOptions: showVisibilityOptions,
+        scope: scope,
       ),
     );
   }
@@ -57,28 +61,61 @@ class _SettingsBottomSheetState extends State<SettingsBottomSheet> {
     if (mounted) setState(() {});
   }
 
+  bool get _showCoptic {
+    if (widget.scope == 'hymns') {
+      return _settingsService.hymnsShowCoptic;
+    }
+    return _settingsService.wordsShowCoptic;
+  }
+
+  bool get _showArabic {
+    if (widget.scope == 'hymns') {
+      return _settingsService.hymnsShowArabic;
+    }
+    return _settingsService.wordsShowArabic;
+  }
+
+  bool get _showPronunciation {
+    if (widget.scope == 'hymns') {
+      return _settingsService.hymnsShowPronunciation;
+    }
+    return _settingsService.wordsShowPronunciation;
+  }
+
   void _toggleCoptic(bool value) {
-    if (!value && !_settingsService.showArabic && !_settingsService.showPronunciation) {
+    if (!value && !_showArabic && !_showPronunciation) {
       _showWarning();
       return;
     }
-    _settingsService.setShowCoptic(value);
+    if (widget.scope == 'hymns') {
+      _settingsService.setHymnsShowCoptic(value);
+    } else {
+      _settingsService.setWordsShowCoptic(value);
+    }
   }
 
   void _toggleArabic(bool value) {
-    if (!value && !_settingsService.showCoptic && !_settingsService.showPronunciation) {
+    if (!value && !_showCoptic && !_showPronunciation) {
       _showWarning();
       return;
     }
-    _settingsService.setShowArabic(value);
+    if (widget.scope == 'hymns') {
+      _settingsService.setHymnsShowArabic(value);
+    } else {
+      _settingsService.setWordsShowArabic(value);
+    }
   }
 
   void _togglePronunciation(bool value) {
-    if (!value && !_settingsService.showCoptic && !_settingsService.showArabic) {
+    if (!value && !_showCoptic && !_showArabic) {
       _showWarning();
       return;
     }
-    _settingsService.setShowPronunciation(value);
+    if (widget.scope == 'hymns') {
+      _settingsService.setHymnsShowPronunciation(value);
+    } else {
+      _settingsService.setWordsShowPronunciation(value);
+    }
   }
 
   void _showWarning() {
@@ -358,7 +395,7 @@ class _SettingsBottomSheetState extends State<SettingsBottomSheet> {
               _buildToggleRow(
                 icon: Icons.sort_by_alpha_rounded,
                 title: _langService.translate('show_coptic'),
-                value: _settingsService.showCoptic,
+                value: _showCoptic,
                 onChanged: _toggleCoptic,
               ),
               const SizedBox(height: 16),
@@ -366,7 +403,7 @@ class _SettingsBottomSheetState extends State<SettingsBottomSheet> {
               _buildToggleRow(
                 icon: Icons.translate_rounded,
                 title: _langService.translate('show_meaning'),
-                value: _settingsService.showArabic,
+                value: _showArabic,
                 onChanged: _toggleArabic,
               ),
               const SizedBox(height: 16),
@@ -374,7 +411,7 @@ class _SettingsBottomSheetState extends State<SettingsBottomSheet> {
               _buildToggleRow(
                 icon: Icons.phonelink_ring_rounded,
                 title: _langService.translate('show_pronunciation'),
-                value: _settingsService.showPronunciation,
+                value: _showPronunciation,
                 onChanged: _togglePronunciation,
               ),
             ],
@@ -384,8 +421,8 @@ class _SettingsBottomSheetState extends State<SettingsBottomSheet> {
               _buildToggleRow(
                 icon: Icons.image_outlined,
                 title: _langService.translate('show_image'),
-                value: _settingsService.showImage,
-                onChanged: (val) => _settingsService.setShowImage(val),
+                value: _settingsService.wordsShowImage,
+                onChanged: (val) => _settingsService.setWordsShowImage(val),
               ),
             ],
             const SizedBox(height: 12),

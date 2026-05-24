@@ -232,7 +232,7 @@ class _WordsPageState extends State<WordsPage> {
                     ),
                     const SizedBox(width: 8),
                     GestureDetector(
-                      onTap: () => SettingsBottomSheet.show(context, showImageOption: true),
+                      onTap: () => SettingsBottomSheet.show(context, showImageOption: true, scope: 'words'),
                       child: Container(
                         padding: const EdgeInsets.all(8),
                         decoration: BoxDecoration(
@@ -418,7 +418,7 @@ class _WordsPageState extends State<WordsPage> {
                                   ),
                                   child: ClipRRect(
                                     borderRadius: BorderRadius.circular(22),
-                                    child: (word.imagePath != null && _settingsService.showImage)
+                                    child: (word.imagePath != null && _settingsService.wordsShowImage)
                                         ? Image.asset(
                                             word.imagePath!,
                                             fit: BoxFit.contain,
@@ -459,7 +459,7 @@ class _WordsPageState extends State<WordsPage> {
                                   child: Column(
                                     crossAxisAlignment: CrossAxisAlignment.end,
                                     children: [
-                                      if (_settingsService.showCoptic)
+                                      if (_settingsService.wordsShowCoptic)
                                         FittedBox(
                                           fit: BoxFit.scaleDown,
                                           alignment: Alignment.centerRight,
@@ -474,9 +474,9 @@ class _WordsPageState extends State<WordsPage> {
                                             ),
                                           ),
                                         ),
-                                      if (_settingsService.showCoptic && (_settingsService.showPronunciation || _settingsService.showArabic))
+                                      if (_settingsService.wordsShowCoptic && (_settingsService.wordsShowPronunciation || _settingsService.wordsShowArabic))
                                         const SizedBox(height: 2),
-                                      if (_settingsService.showPronunciation)
+                                      if (_settingsService.wordsShowPronunciation)
                                         Row(
                                           mainAxisAlignment: MainAxisAlignment.end,
                                           children: [
@@ -502,9 +502,9 @@ class _WordsPageState extends State<WordsPage> {
                                             ),
                                           ],
                                         ),
-                                      if (_settingsService.showPronunciation && _settingsService.showArabic)
+                                      if (_settingsService.wordsShowPronunciation && _settingsService.wordsShowArabic)
                                         const SizedBox(height: 4),
-                                      if (_settingsService.showArabic)
+                                      if (_settingsService.wordsShowArabic)
                                         Row(
                                           mainAxisAlignment: MainAxisAlignment.end,
                                           children: [

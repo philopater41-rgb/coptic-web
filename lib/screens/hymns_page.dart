@@ -229,7 +229,7 @@ class _HymnsPageState extends State<HymnsPage> {
                     ),
                     const SizedBox(width: 8),
                     GestureDetector(
-                      onTap: () => SettingsBottomSheet.show(context, showImageOption: false),
+                      onTap: () => SettingsBottomSheet.show(context, showImageOption: false, scope: 'hymns'),
                       child: Container(
                         padding: const EdgeInsets.all(8),
                         decoration: BoxDecoration(
@@ -418,7 +418,7 @@ class _HymnsPageState extends State<HymnsPage> {
                           const SizedBox(height: 18),
 
                           // Coptic Text
-                          if (_settingsService.showCoptic)
+                          if (_settingsService.hymnsShowCoptic)
                             Text(
                               verse.coptic,
                               textAlign: TextAlign.right,
@@ -433,7 +433,7 @@ class _HymnsPageState extends State<HymnsPage> {
                             ),
 
                           // Phonetics
-                          if (_settingsService.showPronunciation) ...[
+                          if (_settingsService.hymnsShowPronunciation) ...[
                             const SizedBox(height: 6),
                             Text(
                               '[ ${verse.phonetic} ]',
@@ -449,7 +449,7 @@ class _HymnsPageState extends State<HymnsPage> {
                           ],
 
                           // Divider Line
-                          if ((_settingsService.showCoptic || _settingsService.showPronunciation) && _settingsService.showArabic) ...[
+                          if ((_settingsService.hymnsShowCoptic || _settingsService.hymnsShowPronunciation) && _settingsService.hymnsShowArabic) ...[
                             const SizedBox(height: 12),
                             Container(
                               height: 1,
@@ -459,7 +459,7 @@ class _HymnsPageState extends State<HymnsPage> {
                           ],
 
                           // Arabic Text
-                          if (_settingsService.showArabic)
+                          if (_settingsService.hymnsShowArabic)
                             Text(
                               verse.arabic,
                               textAlign: TextAlign.right,
